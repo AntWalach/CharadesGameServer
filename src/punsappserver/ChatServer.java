@@ -1,3 +1,5 @@
+package punsappserver;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,12 +32,23 @@ public class ChatServer {
         }
     }
 
-    public static void broadcastMessage(String message) {
-        // Przekaż wiadomość od jednego klienta do innych klientów
+    public static void broadcastChatMessage(String message) {
         for (Socket socket : clientSockets) {
             try {
                 PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
-                socketOut.println(message);
+                socketOut.println("CHAT " + message); // Prefix with "CHAT" for text messages
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void broadcastCoordinates(double x, double y) {
+        String coordinates = x + " " + y; // Format coordinates as space-separated x y
+        for (Socket socket : clientSockets) {
+            try {
+                PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
+                socketOut.println("COORDINATES " + coordinates); // Prefix with "COORDINATES" for drawing
             } catch (IOException e) {
                 e.printStackTrace();
             }
