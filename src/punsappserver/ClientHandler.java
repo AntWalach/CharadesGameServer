@@ -62,7 +62,7 @@ public class ClientHandler implements Runnable {
 
     private void broadcastClearCanvasCommand() {
         // Iterate through all connected clients and send clear command to each
-        for (Socket clientSocket : ChatServer.clientSockets) {
+        for (Socket clientSocket : CharadesGameServer.clientSockets) {
             try {
                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
                 out.println("CLEAR_CANVAS");

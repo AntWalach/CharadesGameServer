@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatServer implements ServerListener {
+public class CharadesGameServer implements ServerListener {
     private static final int PORT = 3000;
     static List<Socket> clientSockets = new ArrayList<>();
     private static long lastClearTime = 0;
@@ -15,7 +15,7 @@ public class ChatServer implements ServerListener {
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("Chat Server is running on port " + PORT);
+            System.out.println("Charades Game Server is running on port " + PORT);
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -25,7 +25,7 @@ public class ChatServer implements ServerListener {
                 clientSockets.add(clientSocket);
 
                 // Creating a thread to handle the client
-                ClientHandler clientHandler = new ClientHandler(clientSocket, new ChatServer());
+                ClientHandler clientHandler = new ClientHandler(clientSocket, new CharadesGameServer());
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
             }
