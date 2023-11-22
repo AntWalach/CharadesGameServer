@@ -6,9 +6,11 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatServer {
+public class ChatServer implements ServerListener {
     private static final int PORT = 3000;
     static List<Socket> clientSockets = new ArrayList<>();
+    private static long lastClearTime = 0;
+    private static final long CLEAR_COOLDOWN = 1000;
 
     public static void main(String[] args) {
         try {
@@ -19,11 +21,11 @@ public class ChatServer {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Client connected: " + clientSocket);
 
-                // Dodawanie klienta do listy klientów
+                // Adding the client to the list of clients
                 clientSockets.add(clientSocket);
 
-                // Tworzenie wątku obsługującego klienta
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                // Creating a thread to handle the client
+                ClientHandler clientHandler = new ClientHandler(clientSocket, new ChatServer());
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
             }
@@ -32,23 +34,32 @@ public class ChatServer {
         }
     }
 
-    public static void broadcastChatMessage(String message) {
-        for (Socket socket : clientSockets) {
-            try {
-                PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
-                socketOut.println("CHAT " + message); // Prefix with "CHAT" for text messages
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    @Override
+    public void onChatMessageReceived(String message) {
+        // Broadcast chat message to all clients
+        broadcast("CHAT " + message);
+    }
+
+    @Override
+    public void onCoordinatesReceived(double x, double y) {
+        // Broadcast coordinates to all clients
+        broadcast("COORDINATES " + x + " " + y);
+    }
+
+    public void onClearCanvasReceived() {
+        // Broadcast clear canvas message to all clients
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
+            broadcast("CLEAR_CANVAS");
+            lastClearTime = currentTime;
         }
     }
 
-    public static void broadcastCoordinates(double x, double y) {
-        String coordinates = x + " " + y; // Format coordinates as space-separated x y
+    private static void broadcast(String message) {
         for (Socket socket : clientSockets) {
             try {
                 PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
-                socketOut.println("COORDINATES " + coordinates); // Prefix with "COORDINATES" for drawing
+                socketOut.println(message);
             } catch (IOException e) {
                 e.printStackTrace();
             }

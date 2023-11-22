@@ -3,13 +3,22 @@ package punsappserver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
+    private PrintWriter out;
+    private ServerListener serverListener;
 
-    public ClientHandler(Socket clientSocket) {
+    public ClientHandler(Socket clientSocket, ServerListener serverListener) {
         this.clientSocket = clientSocket;
+        this.serverListener = serverListener;
+        try {
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -22,45 +31,52 @@ public class ClientHandler implements Runnable {
                 System.out.println("Received message: " + message);
 
                 if (message.startsWith("COORDINATES")) {
-                    // Extract x and y coordinates from the message
-                    String[] parts = message.split(" ");
-                    if (parts.length >= 3) {
-                        double x = Double.parseDouble(parts[1]);
-                        double y = Double.parseDouble(parts[2]);
-
-                        // Broadcast the coordinates to other clients
-                        //serverListener.onCoordinatesReceived(x, y);
-                        ChatServer.broadcastCoordinates(x,y);
-                    }
+                    handleCoordinatesMessage(message);
+                } else if (message.equals("CLEAR_CANVAS")) {
+                    serverListener.onClearCanvasReceived();
+                    //broadcastClearCanvasCommand();
+                    //break;
                 } else {
-                    // For other message types, broadcast as usual
-                    ChatServer.broadcastChatMessage(message);
+                    handleChatMessage(message);
                 }
-
-//                String[] parts = message.split(" ", 2);
-//                if (parts.length >= 2) {
-//                    String messageType = parts[0];
-//                    String messageContent = parts[1];
-//
-//                    if (messageType.equals("CHAT")) {
-//                        // This is a regular chat message, broadcast it to other clients for chat
-//                        ChatServer.broadcastChatMessage(messageContent);
-//                    } else if (messageType.equals("COORDINATES")) {
-//                        // This is a drawing-related message, broadcast it to other clients for drawing
-//                        ChatServer.broadcastCoordinates(messageContent);
-//                    }
-//                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            // Usuń klienta z listy klientów i zamknij połączenie
-            ChatServer.clientSockets.remove(clientSocket);
+            closeClientSocket();
+        }
+    }
+
+    private void handleCoordinatesMessage(String message) {
+        String[] parts = message.split(" ");
+        if (parts.length >= 3) {
+            double x = Double.parseDouble(parts[1]);
+            double y = Double.parseDouble(parts[2]);
+            serverListener.onCoordinatesReceived(x, y);
+        }
+    }
+
+    private void handleChatMessage(String message) {
+        serverListener.onChatMessageReceived(message);
+    }
+
+    private void broadcastClearCanvasCommand() {
+        // Iterate through all connected clients and send clear command to each
+        for (Socket clientSocket : ChatServer.clientSockets) {
             try {
-                clientSocket.close();
+                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                out.println("CLEAR_CANVAS");
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void closeClientSocket() {
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
