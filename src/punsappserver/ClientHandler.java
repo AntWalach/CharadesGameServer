@@ -30,15 +30,7 @@ public class ClientHandler implements Runnable {
             while ((message = in.readLine()) != null) {
                 System.out.println("Received message: " + message);
 
-                if (message.startsWith("COORDINATES")) {
-                    handleCoordinatesMessage(message);
-                } else if (message.equals("CLEAR_CANVAS")) {
-                    serverListener.onClearCanvasReceived();
-                    //broadcastClearCanvasCommand();
-                    //break;
-                } else {
-                    handleChatMessage(message);
-                }
+                handleMessage(message);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,8 +48,8 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleChatMessage(String message) {
-        serverListener.onChatMessageReceived(message);
+    private void handleMessage(String message) {
+        serverListener.onMessageReceived(message);
     }
 
     private void broadcastClearCanvasCommand() {

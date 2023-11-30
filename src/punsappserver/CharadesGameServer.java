@@ -35,9 +35,9 @@ public class CharadesGameServer implements ServerListener {
     }
 
     @Override
-    public void onChatMessageReceived(String message) {
+    public void onMessageReceived(String message) {
         // Broadcast chat message to all clients
-        broadcast("CHAT " + message);
+        broadcast(message);
     }
 
     @Override
