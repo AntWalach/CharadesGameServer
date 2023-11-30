@@ -40,17 +40,10 @@ public class CharadesGameServer implements ServerListener {
         broadcast(message);
     }
 
-    @Override
-    public void onCoordinatesReceived(double x, double y) {
-        // Broadcast coordinates to all clients
-        broadcast("COORDINATES " + x + " " + y);
-    }
-
-    public void onClearCanvasReceived() {
-        // Broadcast clear canvas message to all clients
+    public void onClearCanvasReceived(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
-            broadcast("CLEAR_CANVAS");
+            broadcast(message);
             lastClearTime = currentTime;
         }
     }
