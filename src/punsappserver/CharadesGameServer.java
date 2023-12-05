@@ -1,10 +1,13 @@
 package punsappserver;
 
+import com.google.gson.Gson;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SimpleTimeZone;
 
 public class CharadesGameServer implements ServerListener {
     private static final int PORT = 3000;
@@ -28,6 +31,8 @@ public class CharadesGameServer implements ServerListener {
                 ClientHandler clientHandler = new ClientHandler(clientSocket, new CharadesGameServer());
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
+
+                broadcastPlayerCount();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,5 +62,16 @@ public class CharadesGameServer implements ServerListener {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static void broadcastPlayerCount() {
+        Message message = new Message();
+        message.setMessageType("PLAYER_COUNT");
+        message.setX(clientSockets.size());
+
+        Gson gson = new Gson();
+        String playerCountMessage = gson.toJson(message, Message.class);
+
+        broadcast(playerCountMessage);
     }
 }
