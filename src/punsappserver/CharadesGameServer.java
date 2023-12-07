@@ -12,7 +12,7 @@ public class CharadesGameServer implements ServerListener {
     static List<Socket> clientSockets = new ArrayList<>();
     private static long lastClearTime = 0;
     private static final long CLEAR_COOLDOWN = 1000;
-    private static int countdownSeconds = 60;
+    private static int countdownSeconds = 10;
     private static boolean countdownRunning = false;
     static Map<String, Socket> userSocketMap = new HashMap<>();
     private static int drawingPlayerIndex = 0;
@@ -51,6 +51,14 @@ public class CharadesGameServer implements ServerListener {
     }
 
     public void onClearCanvasReceived(String message) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
+            broadcast(message);
+            lastClearTime = currentTime;
+        }
+    }
+
+    public static void onClearCanvasReceived1(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
             broadcast(message);
@@ -135,6 +143,13 @@ public class CharadesGameServer implements ServerListener {
         return userSocketMap.get(username);
     }
 
+    public static void clearCanvas(){
+        Message message = new Message();
+        message.setMessageType("CLEAR_CANVAS");
+        String json = new Gson().toJson(message);
+        onClearCanvasReceived1(json);
+    }
+
     private static void changeDrawingPlayer() {
         drawingPlayerIndex++;
         if (drawingPlayerIndex >= clientSockets.size()) {
@@ -143,6 +158,7 @@ public class CharadesGameServer implements ServerListener {
         // Notify the current drawing player
         Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
         notifyDrawingPlayer(currentDrawingSocket);
+        clearCanvas();
     }
 
     private static void notifyDrawingPlayer(Socket drawingSocket) {
