@@ -39,16 +39,18 @@ public class ClientHandler implements Runnable {
 
                 Message message = gson.fromJson(messageServer, Message.class);
 
-                if(Objects.equals(message.getMessageType(), "CLEAR_CANVAS")){
+                if (Objects.equals(message.getMessageType(), "CLEAR_CANVAS")) {
                     serverListener.onClearCanvasReceived(messageServer);
-                }
-                else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
+                } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
                     handleMessage(messageServer);
                     countdownStarted = true;
                     CharadesGameServer.onCountdownStartReceived();
                 } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
                     username = message.getUsername();
-                    CharadesGameServer.addUser(username,clientSocket);
+                    CharadesGameServer.addUser(username, clientSocket);
+
+                } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
+                    serverListener.onColorReceived(messageServer);
                 } else {
                     handleMessage(messageServer);
                 }

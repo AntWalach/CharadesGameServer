@@ -2,22 +2,27 @@ package punsappserver;
 
 import com.google.gson.Gson;
 
+import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CharadesGameServer implements ServerListener {
     private static final int PORT = 3000;
-    static List<Socket> clientSockets = new ArrayList<>();
-    private static long lastClearTime = 0;
     private static final long CLEAR_COOLDOWN = 1000;
-    private static int countdownSeconds = 60;
+    private static int COUNTDOWN_SECONDS = 60;
     private static boolean countdownRunning = false;
-    static Map<String, Socket> userSocketMap = new HashMap<>();
+    private static final Random random = new Random();
+
+    private static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
+    private static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
+    private static long lastClearTime = 0;
     private static int drawingPlayerIndex = 0;
     private static List<String> words = new ArrayList<>();
-
 
     public static void main(String[] args) {
         try {
@@ -25,17 +30,7 @@ public class CharadesGameServer implements ServerListener {
             System.out.println("Charades Game Server is running on port " + PORT);
 
             // Load words from a file into the 'words' list
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader("words_charades.txt"));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] wordsInLine = line.split(",\\s*"); // Split words by commas and optional spaces
-                    words.addAll(Arrays.asList(wordsInLine));
-                }
-                reader.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            loadWordsFromFile();
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -56,6 +51,18 @@ public class CharadesGameServer implements ServerListener {
         }
     }
 
+    private static void loadWordsFromFile() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("words_charades.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] wordsInLine = line.split(",\\s*"); // Split words by commas and optional spaces
+                words.addAll(Arrays.asList(wordsInLine));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onMessageReceived(String message) {
         // Broadcast chat message to all clients
@@ -70,6 +77,7 @@ public class CharadesGameServer implements ServerListener {
         }
     }
 
+
     public static void onClearCanvasReceived1(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
@@ -77,6 +85,45 @@ public class CharadesGameServer implements ServerListener {
             lastClearTime = currentTime;
         }
     }
+
+    public void onColorReceived(String messageServer) {
+        Gson gson = new Gson();
+        Message colorMessage = gson.fromJson(messageServer, Message.class);
+
+        String username = colorMessage.getUsername();
+        String color = colorMessage.getColor();
+
+        Socket senderSocket = CharadesGameServer.getSocketForUser(username);
+
+        // Broadcast the color change to other clients
+        broadcastColorChange(color, senderSocket);
+
+        // Set the color for the sender client
+        setClientColor(color, senderSocket);
+    }
+
+    private void broadcastColorChange(String color, Socket senderSocket) {
+        for (Socket socket : clientSockets) {
+            if (!socket.equals(senderSocket)) {
+                try {
+                    PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
+
+                    Message colorMessage = new Message();
+                    colorMessage.setUsername("Server");
+                    colorMessage.setMessageType("COLOR_CHANGE");
+                    colorMessage.setColor(color);
+
+                    String json = new Gson().toJson(colorMessage);
+                    socketOut.println(json);
+
+                    System.out.println("Sent color change to " + getUsernameForSocket(socket) + ": " + color);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 
     private static void broadcast(String message) {
         for (Socket socket : clientSockets) {
@@ -124,7 +171,7 @@ public class CharadesGameServer implements ServerListener {
 
             //changeDrawingPlayer();
             Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
-            String randomWord = words.get(new Random().nextInt(words.size())-1);
+            String randomWord = words.get(new Random().nextInt(words.size()) - 1);
             String username = getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
@@ -133,14 +180,14 @@ public class CharadesGameServer implements ServerListener {
             broadcast(json);
             notifyDrawingPlayer(currentDrawingSocket, randomWord);
 
-            while (countdownSeconds >= 0) {
-                countdownSeconds--;
-                if (countdownSeconds < 0) {
-                    countdownSeconds = 60; // Reset countdown to 1 minute
+            while (COUNTDOWN_SECONDS >= 0) {
+                COUNTDOWN_SECONDS--;
+                if (COUNTDOWN_SECONDS < 0) {
+                    COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
                     drawingPlayerIndex++;
                     changeDrawingPlayer();
                 }
-                broadcastCountdown(countdownSeconds);
+                broadcastCountdown(COUNTDOWN_SECONDS);
                 //changeDrawingPlayer();
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
@@ -176,7 +223,7 @@ public class CharadesGameServer implements ServerListener {
         return userSocketMap.get(username);
     }
 
-    public static void clearCanvas(){
+    public static void clearCanvas() {
         Message message = new Message();
         message.setMessageType("CLEAR_CANVAS");
         String json = new Gson().toJson(message);
@@ -189,7 +236,7 @@ public class CharadesGameServer implements ServerListener {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
         }
 
-        String randomWord = words.get(new Random().nextInt(words.size())-1);
+        String randomWord = words.get(new Random().nextInt(words.size()) - 1);
 
         // Notify the current drawing player
         Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
@@ -216,7 +263,9 @@ public class CharadesGameServer implements ServerListener {
         message.setChat(username);
         json = new Gson().toJson(message);
         broadcast(json);
+
     }
+
 
     private static String getUsernameForSocket(Socket socket) {
         for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
@@ -226,4 +275,24 @@ public class CharadesGameServer implements ServerListener {
         }
         return null; // Return null if the socket is not found in the map
     }
+
+    private static void setClientColor(String color, Socket clientSocket) {
+
+        try {
+            PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            Message colorMessage = new Message();
+            colorMessage.setUsername("Server");
+            colorMessage.setMessageType("COLOR_CHANGE");
+            colorMessage.setColor(color);
+
+            String json = new Gson().toJson(colorMessage);
+            socketOut.println(json);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
