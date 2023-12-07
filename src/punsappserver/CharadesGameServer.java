@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SimpleTimeZone;
 
 public class CharadesGameServer implements ServerListener {
@@ -14,11 +15,16 @@ public class CharadesGameServer implements ServerListener {
     static List<Socket> clientSockets = new ArrayList<>();
     private static long lastClearTime = 0;
     private static final long CLEAR_COOLDOWN = 1000;
+    private static int countdownSeconds = 60;
+    private static boolean countdownRunning = false;
+
 
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("Charades Game Server is running on port " + PORT);
+
+            //startCountdownTimer();
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -73,5 +79,38 @@ public class CharadesGameServer implements ServerListener {
         String playerCountMessage = gson.toJson(message, Message.class);
 
         broadcast(playerCountMessage);
+    }
+
+    public static void onCountdownStartReceived() {
+        countdownRunning = true;
+        startCountdownTimer();
+    }
+
+    private static void startCountdownTimer() {
+        new Thread(() -> {
+            while (countdownSeconds >= 0) {
+                countdownSeconds--;
+                if (countdownSeconds < 0) {
+                    countdownSeconds = 60; // Reset countdown to 1 minute
+                }
+                broadcastCountdown(countdownSeconds);
+                try {
+                    Thread.sleep(1000); // Sleep for 1 second
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private static void broadcastCountdown(int countdown) {
+        Message message = new Message();
+        message.setMessageType("COUNTDOWN");
+        message.setX(countdown);
+
+        Gson gson = new Gson();
+        String countdownMessage = gson.toJson(message, Message.class);
+
+        broadcast(countdownMessage);
     }
 }

@@ -13,6 +13,7 @@ public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private PrintWriter out;
     private ServerListener serverListener;
+    private boolean countdownStarted = false;
 
     public ClientHandler(Socket clientSocket, ServerListener serverListener) {
         this.clientSocket = clientSocket;
@@ -39,6 +40,11 @@ public class ClientHandler implements Runnable {
 
                 if(Objects.equals(message.getMessageType(), "CLEAR_CANVAS")){
                     serverListener.onClearCanvasReceived(messageServer);
+                }
+                else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
+                    handleMessage(messageServer);
+                    countdownStarted = true;
+                    CharadesGameServer.onCountdownStartReceived();
                 }
                 else {
                     handleMessage(messageServer);
