@@ -14,6 +14,7 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;
     private ServerListener serverListener;
     private boolean countdownStarted = false;
+    private String username;
 
     public ClientHandler(Socket clientSocket, ServerListener serverListener) {
         this.clientSocket = clientSocket;
@@ -45,8 +46,10 @@ public class ClientHandler implements Runnable {
                     handleMessage(messageServer);
                     countdownStarted = true;
                     CharadesGameServer.onCountdownStartReceived();
-                }
-                else {
+                } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
+                    username = message.getUsername();
+                    CharadesGameServer.addUser(username,clientSocket);
+                } else {
                     handleMessage(messageServer);
                 }
             }
@@ -63,6 +66,7 @@ public class ClientHandler implements Runnable {
 
     private void closeClientSocket() {
         try {
+            CharadesGameServer.removeUser(username);
             clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();

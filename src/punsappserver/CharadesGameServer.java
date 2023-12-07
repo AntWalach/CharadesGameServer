@@ -5,10 +5,7 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.SimpleTimeZone;
+import java.util.*;
 
 public class CharadesGameServer implements ServerListener {
     private static final int PORT = 3000;
@@ -17,6 +14,8 @@ public class CharadesGameServer implements ServerListener {
     private static final long CLEAR_COOLDOWN = 1000;
     private static int countdownSeconds = 60;
     private static boolean countdownRunning = false;
+    static Map<String, Socket> userSocketMap = new HashMap<>();
+    private static int drawingPlayerIndex = 0;
 
 
     public static void main(String[] args) {
@@ -88,12 +87,20 @@ public class CharadesGameServer implements ServerListener {
 
     private static void startCountdownTimer() {
         new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            changeDrawingPlayer();
             while (countdownSeconds >= 0) {
                 countdownSeconds--;
                 if (countdownSeconds < 0) {
                     countdownSeconds = 60; // Reset countdown to 1 minute
+                    changeDrawingPlayer();
                 }
                 broadcastCountdown(countdownSeconds);
+                //changeDrawingPlayer();
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
                 } catch (InterruptedException e) {
@@ -112,5 +119,53 @@ public class CharadesGameServer implements ServerListener {
         String countdownMessage = gson.toJson(message, Message.class);
 
         broadcast(countdownMessage);
+    }
+
+    public static void addUser(String username, Socket socket) {
+        userSocketMap.put(username, socket);
+    }
+
+    // Method to remove a user from the map
+    public static void removeUser(String username) {
+        userSocketMap.remove(username);
+    }
+
+    // Method to get the socket for a given username
+    public static Socket getSocketForUser(String username) {
+        return userSocketMap.get(username);
+    }
+
+    private static void changeDrawingPlayer() {
+        drawingPlayerIndex++;
+        if (drawingPlayerIndex >= clientSockets.size()) {
+            drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
+        }
+        // Notify the current drawing player
+        Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
+        notifyDrawingPlayer(currentDrawingSocket);
+    }
+
+    private static void notifyDrawingPlayer(Socket drawingSocket) {
+        String username = getUsernameForSocket(drawingSocket);
+        Message message = new Message();
+        message.setMessageType("CHAT");
+        message.setChat("Turn to draw: " + username);
+        String json = new Gson().toJson(message);
+        broadcast(json);
+
+        message = new Message();
+        message.setMessageType("PERMISSION");
+        message.setChat(username);
+        json = new Gson().toJson(message);
+        broadcast(json);
+    }
+
+    private static String getUsernameForSocket(Socket socket) {
+        for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
+            if (entry.getValue().equals(socket)) {
+                return entry.getKey(); // Return the username for the given socket
+            }
+        }
+        return null; // Return null if the socket is not found in the map
     }
 }
