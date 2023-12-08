@@ -24,6 +24,8 @@ public class CharadesGameServer implements ServerListener {
     private static int drawingPlayerIndex = 0;
     private static List<String> words = new ArrayList<>();
 
+    private static String randomWord;
+
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
@@ -171,7 +173,7 @@ public class CharadesGameServer implements ServerListener {
 
             //changeDrawingPlayer();
             Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
-            String randomWord = words.get(new Random().nextInt(words.size()) - 1);
+            randomWord = words.get(new Random().nextInt(words.size()) - 1);
             String username = getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
@@ -293,6 +295,10 @@ public class CharadesGameServer implements ServerListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getRandomWord(){
+        return randomWord;
     }
 
 }

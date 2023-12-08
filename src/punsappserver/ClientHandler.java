@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
+import static punsappserver.CharadesGameServer.getRandomWord;
+
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private PrintWriter out;
@@ -39,6 +41,7 @@ public class ClientHandler implements Runnable {
 
                 Message message = gson.fromJson(messageServer, Message.class);
 
+
                 if (Objects.equals(message.getMessageType(), "CLEAR_CANVAS")) {
                     serverListener.onClearCanvasReceived(messageServer);
                 } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
@@ -51,7 +54,22 @@ public class ClientHandler implements Runnable {
 
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
                     serverListener.onColorReceived(messageServer);
-                } else {
+                }
+                else if (Objects.equals(message.getMessageType(), "CHAT")){
+                        String randomWord = getRandomWord();
+                        String chatMessage = message.getChat().trim().toLowerCase();
+                        if (chatMessage.equals(randomWord.toLowerCase())) {
+                            Message guessedWordMessage = new Message();
+                            guessedWordMessage.setMessageType("CHAT");
+                            guessedWordMessage.setChat(username + " guessed the word! - " + randomWord);
+                            String winMessage = new Gson().toJson(guessedWordMessage);
+                            handleMessage(winMessage);
+                        }
+                        else{
+                            handleMessage(messageServer);
+                        }
+                }
+                else {
                     handleMessage(messageServer);
                 }
             }
