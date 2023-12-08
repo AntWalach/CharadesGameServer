@@ -203,6 +203,7 @@ public class CharadesGameServer implements ServerListener {
     private static void broadcastCountdown(int countdown) {
         Message message = new Message();
         message.setMessageType("COUNTDOWN");
+        message.setUsername("Server");
         message.setX(countdown);
 
         Gson gson = new Gson();
@@ -250,18 +251,21 @@ public class CharadesGameServer implements ServerListener {
         String username = getUsernameForSocket(drawingSocket);
         Message message = new Message();
         message.setMessageType("CHAT");
+        message.setUsername("Server");
         message.setChat("Turn to draw: " + username);
         String json = new Gson().toJson(message);
         broadcast(json);
 
         message = new Message();
         message.setMessageType("CHAT");
+        message.setUsername("Server");
         message.setChat("Your word is: " + word);
         json = new Gson().toJson(message);
         sendToClient(json, drawingSocket);
 
         message = new Message();
         message.setMessageType("PERMISSION");
+        message.setUsername("Server");
         message.setChat(username);
         json = new Gson().toJson(message);
         broadcast(json);

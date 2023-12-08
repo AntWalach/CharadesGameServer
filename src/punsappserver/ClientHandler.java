@@ -61,9 +61,11 @@ public class ClientHandler implements Runnable {
                         if (chatMessage.equals(randomWord.toLowerCase())) {
                             Message guessedWordMessage = new Message();
                             guessedWordMessage.setMessageType("CHAT");
+                            guessedWordMessage.setUsername("Server");
                             guessedWordMessage.setChat(username + " guessed the word! - " + randomWord);
                             String winMessage = new Gson().toJson(guessedWordMessage);
                             handleMessage(winMessage);
+                            //tu na razie tylko wyświetla wiadomość na czacie, trzeba dorobić przejście do nastepnej rundy
                         }
                         else{
                             handleMessage(messageServer);
