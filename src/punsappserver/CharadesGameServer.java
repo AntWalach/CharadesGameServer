@@ -1,8 +1,6 @@
 package punsappserver;
-
 import com.google.gson.Gson;
 
-import java.awt.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -79,7 +77,6 @@ public class CharadesGameServer implements ServerListener {
         }
     }
 
-
     public static void onClearCanvasReceived1(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
@@ -126,7 +123,6 @@ public class CharadesGameServer implements ServerListener {
         }
     }
 
-
     private static void broadcast(String message) {
         for (Socket socket : clientSockets) {
             try {
@@ -171,9 +167,8 @@ public class CharadesGameServer implements ServerListener {
                 throw new RuntimeException(e);
             }
 
-            //changeDrawingPlayer();
             Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
-            randomWord = words.get(new Random().nextInt(words.size()) - 1);
+            randomWord = getRandomWord(); // Initialize random word
             String username = getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
@@ -186,11 +181,9 @@ public class CharadesGameServer implements ServerListener {
                 COUNTDOWN_SECONDS--;
                 if (COUNTDOWN_SECONDS < 0) {
                     COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
-                    drawingPlayerIndex++;
                     changeDrawingPlayer();
                 }
                 broadcastCountdown(COUNTDOWN_SECONDS);
-                //changeDrawingPlayer();
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
                 } catch (InterruptedException e) {
@@ -216,12 +209,10 @@ public class CharadesGameServer implements ServerListener {
         userSocketMap.put(username, socket);
     }
 
-    // Method to remove a user from the map
     public static void removeUser(String username) {
         userSocketMap.remove(username);
     }
 
-    // Method to get the socket for a given username
     public static Socket getSocketForUser(String username) {
         return userSocketMap.get(username);
     }
@@ -234,21 +225,29 @@ public class CharadesGameServer implements ServerListener {
     }
 
     private static void changeDrawingPlayer() {
-        //drawingPlayerIndex++;
+        drawingPlayerIndex++;
         if (drawingPlayerIndex >= clientSockets.size()) {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
         }
 
-        String randomWord = words.get(new Random().nextInt(words.size()) - 1);
-
         // Notify the current drawing player
         Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
+
+        // Ensure a new random word that is different from the previous one
+        String newRandomWord;
+        do {
+            newRandomWord = getRandomWord();
+        } while (newRandomWord.equals(randomWord));
+
+        randomWord = newRandomWord;
+
         notifyDrawingPlayer(currentDrawingSocket, randomWord);
         clearCanvas();
     }
 
     private static void notifyDrawingPlayer(Socket drawingSocket, String word) {
         String username = getUsernameForSocket(drawingSocket);
+
         Message message = new Message();
         message.setMessageType("CHAT");
         message.setUsername("Server");
@@ -269,9 +268,7 @@ public class CharadesGameServer implements ServerListener {
         message.setChat(username);
         json = new Gson().toJson(message);
         broadcast(json);
-
     }
-
 
     private static String getUsernameForSocket(Socket socket) {
         for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
@@ -283,7 +280,6 @@ public class CharadesGameServer implements ServerListener {
     }
 
     private static void setClientColor(String color, Socket clientSocket) {
-
         try {
             PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);
 
@@ -294,15 +290,42 @@ public class CharadesGameServer implements ServerListener {
 
             String json = new Gson().toJson(colorMessage);
             socketOut.println(json);
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static String getRandomWord(){
-        return randomWord;
+    public static String getRandomWord() {
+        return words.get(random.nextInt(words.size()));
     }
 
+    @Override
+    public void onChatMessageReceived(String username, String chatMessage) {
+        String trimmedChatMessage = chatMessage.trim().toLowerCase();
+
+        if (trimmedChatMessage.equals(randomWord.toLowerCase())) {
+            // Handle guessed word message
+            Message guessedWordMessage = new Message();
+            guessedWordMessage.setMessageType("CHAT");
+            guessedWordMessage.setUsername("Server");
+            guessedWordMessage.setChat(username + " guessed the word! - " + randomWord);
+
+            String winMessage = new Gson().toJson(guessedWordMessage);
+            broadcast(winMessage);
+
+            // Reset countdown
+            COUNTDOWN_SECONDS = 60;
+
+            // Change drawing player
+            changeDrawingPlayer();
+        } else {
+            // Handle regular chat messages
+            Message regularChatMessage = new Message();
+            regularChatMessage.setMessageType("CHAT");
+            regularChatMessage.setUsername(username);
+            regularChatMessage.setChat(chatMessage);
+            String regularChatJson = new Gson().toJson(regularChatMessage);
+            broadcast(regularChatJson);
+        }
+    }
 }

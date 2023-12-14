@@ -9,8 +9,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
-import static punsappserver.CharadesGameServer.getRandomWord;
-
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private PrintWriter out;
@@ -56,20 +54,7 @@ public class ClientHandler implements Runnable {
                     serverListener.onColorReceived(messageServer);
                 }
                 else if (Objects.equals(message.getMessageType(), "CHAT")){
-                        String randomWord = getRandomWord();
-                        String chatMessage = message.getChat().trim().toLowerCase();
-                        if (chatMessage.equals(randomWord.toLowerCase())) {
-                            Message guessedWordMessage = new Message();
-                            guessedWordMessage.setMessageType("CHAT");
-                            guessedWordMessage.setUsername("Server");
-                            guessedWordMessage.setChat(username + " guessed the word! - " + randomWord);
-                            String winMessage = new Gson().toJson(guessedWordMessage);
-                            handleMessage(winMessage);
-                            //tu na razie tylko wyświetla wiadomość na czacie, trzeba dorobić przejście do nastepnej rundy
-                        }
-                        else{
-                            handleMessage(messageServer);
-                        }
+                    serverListener.onChatMessageReceived(username, message.getChat());
                 }
                 else {
                     handleMessage(messageServer);

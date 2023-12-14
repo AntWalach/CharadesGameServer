@@ -8,4 +8,6 @@ public interface ServerListener {
     void onClearCanvasReceived(String messageServer);
 
     void onColorReceived(String messageServer);
+
+    void onChatMessageReceived(String username, String chatMessage);
 }
