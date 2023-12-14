@@ -101,7 +101,7 @@ public class CharadesGameServer implements ServerListener {
         setClientColor(color, senderSocket);
     }
 
-    private void broadcastColorChange(String color, Socket senderSocket) {
+    private static void broadcastColorChange(String color, Socket senderSocket) {
         for (Socket socket : clientSockets) {
             if (!socket.equals(senderSocket)) {
                 try {
@@ -182,6 +182,7 @@ public class CharadesGameServer implements ServerListener {
                 if (COUNTDOWN_SECONDS < 0) {
                     COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
                     changeDrawingPlayer();
+                    //clearChatArea();
                 }
                 broadcastCountdown(COUNTDOWN_SECONDS);
                 try {
@@ -233,6 +234,10 @@ public class CharadesGameServer implements ServerListener {
         // Notify the current drawing player
         Socket currentDrawingSocket = clientSockets.get(drawingPlayerIndex);
 
+        clearChatArea();
+
+        COUNTDOWN_SECONDS = 60;
+
         // Ensure a new random word that is different from the previous one
         String newRandomWord;
         do {
@@ -241,8 +246,17 @@ public class CharadesGameServer implements ServerListener {
 
         randomWord = newRandomWord;
 
+        broadcastColorChange("0x000000ff",currentDrawingSocket);
         notifyDrawingPlayer(currentDrawingSocket, randomWord);
         clearCanvas();
+    }
+
+    private static void clearChatArea(){
+        Message message = new Message();
+        message.setMessageType("CLEAR_CHAT");
+        String json = new Gson().toJson(message, Message.class);
+
+        broadcast(json);
     }
 
     private static void notifyDrawingPlayer(Socket drawingSocket, String word) {
@@ -313,11 +327,9 @@ public class CharadesGameServer implements ServerListener {
             String winMessage = new Gson().toJson(guessedWordMessage);
             broadcast(winMessage);
 
-            // Reset countdown
-            COUNTDOWN_SECONDS = 60;
-
             // Change drawing player
             changeDrawingPlayer();
+            //clearChatArea();
         } else {
             // Handle regular chat messages
             Message regularChatMessage = new Message();
