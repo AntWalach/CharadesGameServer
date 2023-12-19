@@ -41,20 +41,20 @@ public class ClientHandler implements Runnable {
 
 
                 if (Objects.equals(message.getMessageType(), "CLEAR_CANVAS")) {
-                    serverListener.onClearCanvasReceived(messageServer);
+                    CanvasManagement.onClearCanvasReceived(messageServer);
                 } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
                     handleMessage(messageServer);
                     countdownStarted = true;
-                    CharadesGameServer.onCountdownStartReceived();
+                    OnMessageReceivedManagement.onCountdownStartReceived();
                 } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
                     username = message.getUsername();
                     CharadesGameServer.addUser(username, clientSocket);
 
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
-                    serverListener.onColorReceived(messageServer);
+                    CanvasManagement.onColorReceived(messageServer);
                 }
                 else if (Objects.equals(message.getMessageType(), "CHAT")){
-                    serverListener.onChatMessageReceived(username, message.getChat());
+                    OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat());
                 }
                 else {
                     handleMessage(messageServer);
@@ -68,7 +68,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleMessage(String message) {
-        serverListener.onMessageReceived(message);
+        OnMessageReceivedManagement.onMessageReceived(message);
     }
 
     private void closeClientSocket() {
