@@ -2,6 +2,8 @@ package punsappserver;
 
 import com.google.gson.Gson;
 
+import java.net.Socket;
+
 public class OnMessageReceivedManagement {
 
     public static void onMessageReceived(String message) {
@@ -26,10 +28,18 @@ public class OnMessageReceivedManagement {
 
             String winMessage = new Gson().toJson(guessedWordMessage);
 
+            Socket userSocket = CharadesGameServer.userSocketMap.get(username);
+
+            if (userSocket != null) {
+                // Increment the score for the user's socket
+                CharadesGameServer.playerScoresMap.merge(userSocket, 1, Integer::sum);
+            }
 
             // Change drawing player
             GameManagement.changeDrawingPlayer();
+            BroadcastManagement.broadcastClearLeaderboard();
             BroadcastManagement.broadcast(winMessage);
+            BroadcastManagement.broadcastLeaderboard(CharadesGameServer.playerScoresMap);
             //clearChatArea();
         } else {
             // Handle regular chat messages

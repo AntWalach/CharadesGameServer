@@ -14,7 +14,8 @@ public class CharadesGameServer implements ServerListener {
     protected static boolean countdownRunning = false;
 
     static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
-    private static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
+    static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
+    static final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
     static List<String> words = new ArrayList<>();
 
     protected static String randomWord;
@@ -58,6 +59,7 @@ public class CharadesGameServer implements ServerListener {
 
     public static void addUser(String username, Socket socket) {
         userSocketMap.put(username, socket);
+        playerScoresMap.put(socket, 0);
     }
 
     public static void removeUser(String username) {

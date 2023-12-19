@@ -11,6 +11,8 @@ public class GameManagement {
     private static final Random random = new Random();
 
     static void startCountdownTimer() {
+        BroadcastManagement.broadcastLeaderboard(CharadesGameServer.playerScoresMap);
+
         new Thread(() -> {
             try {
                 Thread.sleep(3000);
