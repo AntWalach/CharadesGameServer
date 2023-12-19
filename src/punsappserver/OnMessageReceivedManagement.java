@@ -25,10 +25,11 @@ public class OnMessageReceivedManagement {
             guessedWordMessage.setChat(username + " guessed the word! - " + CharadesGameServer.randomWord);
 
             String winMessage = new Gson().toJson(guessedWordMessage);
-            BroadcastManagement.broadcast(winMessage);
+
 
             // Change drawing player
             GameManagement.changeDrawingPlayer();
+            BroadcastManagement.broadcast(winMessage);
             //clearChatArea();
         } else {
             // Handle regular chat messages
