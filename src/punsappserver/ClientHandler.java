@@ -52,11 +52,11 @@ public class ClientHandler implements Runnable {
 
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
                     CanvasManagement.onColorReceived(messageServer);
-                }
-                else if (Objects.equals(message.getMessageType(), "CHAT")){
+                } else if (Objects.equals(message.getMessageType(), "CHAT")){
                     OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat());
-                }
-                else {
+                } else if (Objects.equals(message.getMessageType(), "CREATE_ROOM")) {
+                    WaitingRoomManagement.createNewRoom();
+                } else {
                     handleMessage(messageServer);
                 }
             }
