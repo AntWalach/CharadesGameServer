@@ -56,6 +56,8 @@ public class ClientHandler implements Runnable {
                     OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat());
                 } else if (Objects.equals(message.getMessageType(), "CREATE_ROOM")) {
                     WaitingRoomManagement.createNewRoom();
+                } else if (Objects.equals(message.getMessageType(), "JOIN_ROOM")) {
+                    WaitingRoomManagement.joinRoom(message.roomId, message.getUsername());
                 } else {
                     handleMessage(messageServer);
                 }

@@ -15,7 +15,6 @@ public class CharadesGameServer implements ServerListener {
     static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
     static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
     static final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
-    static final Map<Integer, Integer> roomNumerOfPlayersMap = new ConcurrentHashMap<>();
     static List<String> words = new ArrayList<>();
 
     protected static String randomWord;
