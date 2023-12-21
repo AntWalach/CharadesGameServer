@@ -11,12 +11,12 @@ public class OnMessageReceivedManagement {
         BroadcastManagement.broadcast(message);
     }
 
-    public static void onCountdownStartReceived() {
+    public static void onCountdownStartReceived(int roomId) {
         CharadesGameServer.countdownRunning = true;
-        GameManagement.startCountdownTimer();
+        GameManagement.startCountdownTimer(roomId);
     }
 
-    public static void onChatMessageReceived(String username, String chatMessage) {
+    public static void onChatMessageReceived(String username, String chatMessage, int roomId) {
         String trimmedChatMessage = chatMessage.trim().toLowerCase();
 
         if (trimmedChatMessage.equals(CharadesGameServer.randomWord.toLowerCase())) {
@@ -24,6 +24,7 @@ public class OnMessageReceivedManagement {
             Message guessedWordMessage = new Message();
             guessedWordMessage.setMessageType("CHAT");
             guessedWordMessage.setUsername("Server");
+            guessedWordMessage.setRoomId(roomId);
             guessedWordMessage.setChat(username + " guessed the word! - " + CharadesGameServer.randomWord);
 
             String winMessage = new Gson().toJson(guessedWordMessage);
@@ -36,7 +37,7 @@ public class OnMessageReceivedManagement {
             }
 
             // Change drawing player
-            GameManagement.changeDrawingPlayer();
+            GameManagement.changeDrawingPlayer(roomId);
             BroadcastManagement.broadcastClearLeaderboard();
             BroadcastManagement.broadcast(winMessage);
             BroadcastManagement.broadcastLeaderboard(CharadesGameServer.playerScoresMap);
@@ -45,6 +46,7 @@ public class OnMessageReceivedManagement {
             // Handle regular chat messages
             Message regularChatMessage = new Message();
             regularChatMessage.setMessageType("CHAT");
+            regularChatMessage.setRoomId(roomId);
             regularChatMessage.setUsername(username);
             regularChatMessage.setChat(chatMessage);
             String regularChatJson = new Gson().toJson(regularChatMessage);

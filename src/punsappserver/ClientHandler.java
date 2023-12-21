@@ -45,7 +45,7 @@ public class ClientHandler implements Runnable {
                 } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
                     handleMessage(messageServer);
                     countdownStarted = true;
-                    OnMessageReceivedManagement.onCountdownStartReceived();
+                    OnMessageReceivedManagement.onCountdownStartReceived(message.getRoomId());
                 } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
                     username = message.getUsername();
                     CharadesGameServer.addUser(username, clientSocket);
@@ -53,7 +53,7 @@ public class ClientHandler implements Runnable {
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
                     CanvasManagement.onColorReceived(messageServer);
                 } else if (Objects.equals(message.getMessageType(), "CHAT")){
-                    OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat());
+                    OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId());
                 } else if (Objects.equals(message.getMessageType(), "CREATE_ROOM")) {
                     WaitingRoomManagement.createNewRoom();
                 } else if (Objects.equals(message.getMessageType(), "JOIN_ROOM")) {

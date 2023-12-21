@@ -46,7 +46,6 @@ public class CharadesGameServer implements ServerListener {
         }
     }
 
-
     static void sendToClient(String message, Socket socket) {
         try {
             PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);

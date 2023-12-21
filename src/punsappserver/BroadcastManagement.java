@@ -32,10 +32,11 @@ public class BroadcastManagement {
         broadcast(playerCountMessage);
     }
 
-    static void broadcastCountdown(int countdown) {
+    static void broadcastCountdown(int countdown, int roomId) {
         Message message = new Message();
         message.setMessageType("COUNTDOWN");
         message.setUsername("Server");
+        message.setRoomId(roomId);
         message.setX(countdown);
 
         Gson gson = new Gson();

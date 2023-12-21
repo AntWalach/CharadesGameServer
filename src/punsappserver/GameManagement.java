@@ -10,7 +10,7 @@ public class GameManagement {
     protected static int drawingPlayerIndex = 0;
     private static final Random random = new Random();
 
-    static void startCountdownTimer() {
+    static void startCountdownTimer(int roomId) {
         BroadcastManagement.broadcastLeaderboard(CharadesGameServer.playerScoresMap);
 
         new Thread(() -> {
@@ -25,19 +25,20 @@ public class GameManagement {
             String username = CharadesGameServer.getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
+            message.setRoomId(roomId);
             message.setChat("Turn to draw: " + username);
             String json = new Gson().toJson(message);
             BroadcastManagement.broadcast(json);
-            notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord);
+            notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord, roomId);
 
             while (COUNTDOWN_SECONDS >= 0) {
                 COUNTDOWN_SECONDS--;
                 if (COUNTDOWN_SECONDS < 0) {
                     COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
-                    changeDrawingPlayer();
+                    changeDrawingPlayer(roomId);
                     //clearChatArea();
                 }
-                BroadcastManagement.broadcastCountdown(COUNTDOWN_SECONDS);
+                BroadcastManagement.broadcastCountdown(COUNTDOWN_SECONDS, roomId);
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
                 } catch (InterruptedException e) {
@@ -47,7 +48,7 @@ public class GameManagement {
         }).start();
     }
 
-    static void changeDrawingPlayer() {
+    static void changeDrawingPlayer(int roomId) {
         drawingPlayerIndex++;
         if (drawingPlayerIndex >= CharadesGameServer.clientSockets.size()) {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
@@ -56,7 +57,7 @@ public class GameManagement {
         // Notify the current drawing player
         Socket currentDrawingSocket = CharadesGameServer.clientSockets.get(drawingPlayerIndex);
 
-        ChatManagement.clearChatArea();
+        ChatManagement.clearChatArea(roomId);
 
         COUNTDOWN_SECONDS = 60;
 
@@ -69,16 +70,17 @@ public class GameManagement {
         CharadesGameServer.randomWord = newRandomWord;
 
         CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket);
-        notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord);
+        notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord, roomId);
         CanvasManagement.clearCanvas();
     }
 
-    private static void notifyDrawingPlayer(Socket drawingSocket, String word) {
+    private static void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {
         String username = CharadesGameServer.getUsernameForSocket(drawingSocket);
 
         Message message = new Message();
         message.setMessageType("CHAT");
         message.setUsername("Server");
+        message.setRoomId(roomId);
         message.setChat("Turn to draw: " + username);
         String json = new Gson().toJson(message);
         BroadcastManagement.broadcast(json);
@@ -86,6 +88,7 @@ public class GameManagement {
         message = new Message();
         message.setMessageType("CHAT");
         message.setUsername("Server");
+        message.setRoomId(roomId);
         message.setChat("Your word is: " + word);
         json = new Gson().toJson(message);
         CharadesGameServer.sendToClient(json, drawingSocket);
@@ -93,6 +96,7 @@ public class GameManagement {
         message = new Message();
         message.setMessageType("PERMISSION");
         message.setUsername("Server");
+        message.setRoomId(roomId);
         message.setChat(username);
         json = new Gson().toJson(message);
         BroadcastManagement.broadcast(json);
