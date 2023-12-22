@@ -1,5 +1,4 @@
 package punsappserver;
-import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -9,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class CharadesGameServer implements ServerListener {
+public class CharadesGameServer {
     private static final int PORT = 3000;
     protected static boolean countdownRunning = false;
     static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
@@ -21,11 +20,11 @@ public class CharadesGameServer implements ServerListener {
 
     public static void main(String[] args) {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
+            ServerSocket serverSocket = new ServerSocket(PORT); //waiting room server
             System.out.println("Charades Game Server is running on port " + PORT);
 
             // Load words from a file into the 'words' list
-            WordListManagement.loadWordsFromFile();
+            //WordListManagement.loadWordsFromFile();
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -35,7 +34,7 @@ public class CharadesGameServer implements ServerListener {
                 clientSockets.add(clientSocket);
 
                 // Creating a thread to handle the client
-                ClientHandler clientHandler = new ClientHandler(clientSocket, new CharadesGameServer());
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
                 Thread clientThread = new Thread(clientHandler);
                 clientThread.start();
 
