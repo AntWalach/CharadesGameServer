@@ -12,7 +12,7 @@ public class WordListManagement {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] wordsInLine = line.split(",\\s*"); // Split words by commas and optional spaces
-                CharadesGameServer.words.addAll(Arrays.asList(wordsInLine));
+                RoomServer.words.addAll(Arrays.asList(wordsInLine));
             }
         } catch (IOException e) {
             e.printStackTrace();

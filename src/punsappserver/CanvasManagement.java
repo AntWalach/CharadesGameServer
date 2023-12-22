@@ -13,7 +13,7 @@ public class CanvasManagement {
     public static void onClearCanvasReceived(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
-            BroadcastManagement.broadcast(message);
+            BroadcastRoom.broadcastRoom(message);
             lastClearTime = currentTime;
         }
     }
@@ -21,7 +21,7 @@ public class CanvasManagement {
     public static void onClearCanvasReceived1(String message) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
-            BroadcastManagement.broadcast(message);
+            BroadcastRoom.broadcastRoom(message);
             lastClearTime = currentTime;
         }
     }
@@ -33,7 +33,7 @@ public class CanvasManagement {
         String username = colorMessage.getUsername();
         String color = colorMessage.getColor();
 
-        Socket senderSocket = CharadesGameServer.getSocketForUser(username);
+        Socket senderSocket = RoomServer.getSocketForUser(username);
 
         // Broadcast the color change to other clients
         broadcastColorChange(color, senderSocket);
@@ -43,7 +43,7 @@ public class CanvasManagement {
     }
 
     static void broadcastColorChange(String color, Socket senderSocket) {
-        for (Socket socket : CharadesGameServer.clientSockets) {
+        for (Socket socket : RoomServer.clientSockets) {
             if (!socket.equals(senderSocket)) {
                 try {
                     PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
@@ -56,7 +56,7 @@ public class CanvasManagement {
                     String json = new Gson().toJson(colorMessage);
                     socketOut.println(json);
 
-                    System.out.println("Sent color change to " + CharadesGameServer.getUsernameForSocket(socket) + ": " + color);
+                    System.out.println("Sent color change to " + RoomServer.getUsernameForSocket(socket) + ": " + color);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

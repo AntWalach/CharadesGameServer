@@ -9,6 +9,6 @@ public class ChatManagement {
         message.setRoomId(roomId);
         String json = new Gson().toJson(message, Message.class);
 
-        BroadcastManagement.broadcast(json);
+        BroadcastRoom.broadcastRoom(json);
     }
 }

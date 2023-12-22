@@ -24,7 +24,7 @@ public class BroadcastManagement {
     static void broadcastPlayerCount() {
         Message message = new Message();
         message.setMessageType("PLAYER_COUNT");
-        message.setX(CharadesGameServer.clientSockets.size());
+        message.setX(RoomServer.clientSockets.size());
 
         Gson gson = new Gson();
         String playerCountMessage = gson.toJson(message, Message.class);
@@ -51,7 +51,7 @@ public class BroadcastManagement {
             Integer score = entry.getValue();
 
             // Convert Socket to username (or any identifier)
-            String username = CharadesGameServer.getUsernameForSocket(socket);
+            String username = RoomServer.getUsernameForSocket(socket);
 
             Message message =new Message();
             message.setMessageType("LEADERBOARD");

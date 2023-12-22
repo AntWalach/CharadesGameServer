@@ -11,7 +11,7 @@ public class GameManagement {
     private static final Random random = new Random();
 
     static void startCountdownTimer(int roomId) {
-        BroadcastManagement.broadcastLeaderboard(CharadesGameServer.playerScoresMap);
+        BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap);
 
         new Thread(() -> {
             try {
@@ -20,16 +20,16 @@ public class GameManagement {
                 throw new RuntimeException(e);
             }
 
-            Socket currentDrawingSocket = CharadesGameServer.clientSockets.get(drawingPlayerIndex);
-            CharadesGameServer.randomWord = getRandomWord(); // Initialize random word
-            String username = CharadesGameServer.getUsernameForSocket(currentDrawingSocket);
+            Socket currentDrawingSocket = RoomServer.clientSockets.get(drawingPlayerIndex);
+            RoomServer.randomWord = getRandomWord(); // Initialize random word
+            String username = RoomServer.getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
             message.setRoomId(roomId);
             message.setChat("Turn to draw: " + username);
             String json = new Gson().toJson(message);
-            BroadcastManagement.broadcast(json);
-            notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord, roomId);
+            BroadcastRoom.broadcastRoom(json);
+            notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
 
             while (COUNTDOWN_SECONDS >= 0) {
                 COUNTDOWN_SECONDS--;
@@ -38,7 +38,7 @@ public class GameManagement {
                     changeDrawingPlayer(roomId);
                     //clearChatArea();
                 }
-                BroadcastManagement.broadcastCountdown(COUNTDOWN_SECONDS, roomId);
+                BroadcastRoom.broadcastCountdown(COUNTDOWN_SECONDS, roomId);
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
                 } catch (InterruptedException e) {
@@ -50,12 +50,12 @@ public class GameManagement {
 
     static void changeDrawingPlayer(int roomId) {
         drawingPlayerIndex++;
-        if (drawingPlayerIndex >= CharadesGameServer.clientSockets.size()) {
+        if (drawingPlayerIndex >= RoomServer.clientSockets.size()) {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
         }
 
         // Notify the current drawing player
-        Socket currentDrawingSocket = CharadesGameServer.clientSockets.get(drawingPlayerIndex);
+        Socket currentDrawingSocket = RoomServer.clientSockets.get(drawingPlayerIndex);
 
         ChatManagement.clearChatArea(roomId);
 
@@ -65,17 +65,17 @@ public class GameManagement {
         String newRandomWord;
         do {
             newRandomWord = getRandomWord();
-        } while (newRandomWord.equals(CharadesGameServer.randomWord));
+        } while (newRandomWord.equals(RoomServer.randomWord));
 
-        CharadesGameServer.randomWord = newRandomWord;
+        RoomServer.randomWord = newRandomWord;
 
         CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket);
-        notifyDrawingPlayer(currentDrawingSocket, CharadesGameServer.randomWord, roomId);
+        notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
         CanvasManagement.clearCanvas();
     }
 
     private static void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {
-        String username = CharadesGameServer.getUsernameForSocket(drawingSocket);
+        String username = RoomServer.getUsernameForSocket(drawingSocket);
 
         Message message = new Message();
         message.setMessageType("CHAT");
@@ -83,7 +83,7 @@ public class GameManagement {
         message.setRoomId(roomId);
         message.setChat("Turn to draw: " + username);
         String json = new Gson().toJson(message);
-        BroadcastManagement.broadcast(json);
+        BroadcastRoom.broadcastRoom(json);
 
         message = new Message();
         message.setMessageType("CHAT");
@@ -91,7 +91,7 @@ public class GameManagement {
         message.setRoomId(roomId);
         message.setChat("Your word is: " + word);
         json = new Gson().toJson(message);
-        CharadesGameServer.sendToClient(json, drawingSocket);
+        RoomServer.sendToClient(json, drawingSocket);
 
         message = new Message();
         message.setMessageType("PERMISSION");
@@ -99,10 +99,10 @@ public class GameManagement {
         message.setRoomId(roomId);
         message.setChat(username);
         json = new Gson().toJson(message);
-        BroadcastManagement.broadcast(json);
+        BroadcastRoom.broadcastRoom(json);
     }
 
     public static String getRandomWord() {
-        return CharadesGameServer.words.get(random.nextInt(CharadesGameServer.words.size()));
+        return RoomServer.words.get(random.nextInt(RoomServer.words.size()));
     }
 }
