@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class RoomServer {
+public class RoomServer implements Runnable{
     ServerSocket roomServerSocket;
     private final int roomPort;
     static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
@@ -20,8 +20,11 @@ public class RoomServer {
     protected static String randomWord;
     protected static boolean countdownRunning = false;
 
+    protected static int COUNTDOWN_SECONDS = 60;
+
     public RoomServer(int roomPort) throws IOException {
         this.roomPort = roomPort;
+
     }
 
     public void run() {
@@ -32,7 +35,7 @@ public class RoomServer {
 
             WordListManagement.loadWordsFromFile();
 
-            GameManagement.startCountdownTimer(1);
+            GameManagement.startCountdownTimer(roomPort%10);
 
             while (true) {
                 Socket clientSocket = roomServerSocket.accept();
@@ -50,6 +53,7 @@ public class RoomServer {
             e.printStackTrace();
         }
     }
+
 
     static void sendToClient(String message, Socket socket) {
         try {

@@ -10,13 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CharadesGameServer {
     private static final int PORT = 3000;
-    protected static boolean countdownRunning = false;
     static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
     static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
     static final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
-    static List<String> words = new ArrayList<>();
 
-    protected static String randomWord;
 
     public static void main(String[] args) {
         try {
@@ -45,14 +42,6 @@ public class CharadesGameServer {
         }
     }
 
-    static void sendToClient(String message, Socket socket) {
-        try {
-            PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
-            socketOut.println(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static void addUser(String username, Socket socket) {
         userSocketMap.put(username, socket);
@@ -63,16 +52,5 @@ public class CharadesGameServer {
         userSocketMap.remove(username);
     }
 
-    public static Socket getSocketForUser(String username) {
-        return userSocketMap.get(username);
-    }
 
-    static String getUsernameForSocket(Socket socket) {
-        for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
-            if (entry.getValue().equals(socket)) {
-                return entry.getKey(); // Return the username for the given socket
-            }
-        }
-        return null; // Return null if the socket is not found in the map
-    }
 }

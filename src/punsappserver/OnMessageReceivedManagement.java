@@ -39,9 +39,9 @@ public class OnMessageReceivedManagement {
 
             // Change drawing player
             GameManagement.changeDrawingPlayer(roomId);
-            BroadcastRoom.broadcastClearLeaderboard();
+            BroadcastRoom.broadcastClearLeaderboard(roomId);
             BroadcastRoom.broadcastRoom(winMessage);
-            BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap);
+            BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap, roomId);
             //clearChatArea();
         } else {
             // Handle regular chat messages

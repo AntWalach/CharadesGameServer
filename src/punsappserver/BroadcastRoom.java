@@ -18,16 +18,6 @@ public class BroadcastRoom {
             }
         }
     }
-    static void broadcastPlayerCount() {
-        Message message = new Message();
-        message.setMessageType("PLAYER_COUNT");
-        message.setX(RoomServer.clientSockets.size());
-
-        Gson gson = new Gson();
-        String playerCountMessage = gson.toJson(message, Message.class);
-
-        broadcastRoom(playerCountMessage);
-    }
 
     static void broadcastCountdown(int countdown, int roomId) {
         Message message = new Message();
@@ -42,7 +32,7 @@ public class BroadcastRoom {
         broadcastRoom(countdownMessage);
     }
 
-    static void broadcastLeaderboard(Map<Socket, Integer> playerScoresMap) {
+    static void broadcastLeaderboard(Map<Socket, Integer> playerScoresMap,int roomId) {
         for (Map.Entry<Socket, Integer> entry : playerScoresMap.entrySet()) {
             Socket socket = entry.getKey();
             Integer score = entry.getValue();
@@ -53,6 +43,7 @@ public class BroadcastRoom {
             Message message =new Message();
             message.setMessageType("LEADERBOARD");
             message.setUsername(username);
+            message.setRoomId(roomId);
             message.setX(score);
 
             String json = new Gson().toJson(message, Message.class);
@@ -60,9 +51,10 @@ public class BroadcastRoom {
         }
     }
 
-    static void broadcastClearLeaderboard(){
+    static void broadcastClearLeaderboard(int roomId){
         Message message =new Message();
         message.setMessageType("CLEAR_LEADERBOARD");
+        message.setRoomId(roomId);
         String json = new Gson().toJson(message, Message.class);
         BroadcastRoom.broadcastRoom(json);
     }

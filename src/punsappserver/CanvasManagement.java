@@ -32,17 +32,17 @@ public class CanvasManagement {
 
         String username = colorMessage.getUsername();
         String color = colorMessage.getColor();
-
+        int roomId = colorMessage.getRoomId();
         Socket senderSocket = RoomServer.getSocketForUser(username);
 
         // Broadcast the color change to other clients
-        broadcastColorChange(color, senderSocket);
+        broadcastColorChange(color, senderSocket,roomId);
 
         // Set the color for the sender client
-        setClientColor(color, senderSocket);
+        setClientColor(color, senderSocket, roomId);
     }
 
-    static void broadcastColorChange(String color, Socket senderSocket) {
+    static void broadcastColorChange(String color, Socket senderSocket,int roomId) {
         for (Socket socket : RoomServer.clientSockets) {
             if (!socket.equals(senderSocket)) {
                 try {
@@ -50,6 +50,7 @@ public class CanvasManagement {
 
                     Message colorMessage = new Message();
                     colorMessage.setUsername("Server");
+                    colorMessage.setRoomId(roomId);
                     colorMessage.setMessageType("COLOR_CHANGE");
                     colorMessage.setColor(color);
 
@@ -64,19 +65,21 @@ public class CanvasManagement {
         }
     }
 
-    public static void clearCanvas() {
+    public static void clearCanvas(int roomId) {
         Message message = new Message();
         message.setMessageType("CLEAR_CANVAS");
+        message.setRoomId(roomId);
         String json = new Gson().toJson(message);
-        CanvasManagement.onClearCanvasReceived1(json);
+        BroadcastRoom.broadcastRoom(json);
     }
 
-    static void setClientColor(String color, Socket clientSocket) {
+    static void setClientColor(String color, Socket clientSocket, int roomId) {
         try {
             PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);
 
             Message colorMessage = new Message();
             colorMessage.setUsername("Server");
+            colorMessage.setRoomId(roomId);
             colorMessage.setMessageType("COLOR_CHANGE");
             colorMessage.setColor(color);
 

@@ -6,12 +6,12 @@ import java.net.Socket;
 import java.util.Random;
 
 public class GameManagement {
-    protected static int COUNTDOWN_SECONDS = 60;
+    //protected static int COUNTDOWN_SECONDS = 60;
     protected static int drawingPlayerIndex = 0;
     private static final Random random = new Random();
 
     static void startCountdownTimer(int roomId) {
-        BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap);
+        BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap, roomId);
 
         new Thread(() -> {
             try {
@@ -31,14 +31,14 @@ public class GameManagement {
             BroadcastRoom.broadcastRoom(json);
             notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
 
-            while (COUNTDOWN_SECONDS >= 0) {
-                COUNTDOWN_SECONDS--;
-                if (COUNTDOWN_SECONDS < 0) {
-                    COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
+            while (RoomServer.COUNTDOWN_SECONDS >= 0) {
+                RoomServer.COUNTDOWN_SECONDS--;
+                if (RoomServer.COUNTDOWN_SECONDS < 0) {
+                    RoomServer.COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
                     changeDrawingPlayer(roomId);
                     //clearChatArea();
                 }
-                BroadcastRoom.broadcastCountdown(COUNTDOWN_SECONDS, roomId);
+                BroadcastRoom.broadcastCountdown(RoomServer.COUNTDOWN_SECONDS, roomId);
                 try {
                     Thread.sleep(1000); // Sleep for 1 second
                 } catch (InterruptedException e) {
@@ -59,7 +59,7 @@ public class GameManagement {
 
         ChatManagement.clearChatArea(roomId);
 
-        COUNTDOWN_SECONDS = 60;
+        RoomServer.COUNTDOWN_SECONDS = 60;
 
         // Ensure a new random word that is different from the previous one
         String newRandomWord;
@@ -69,9 +69,9 @@ public class GameManagement {
 
         RoomServer.randomWord = newRandomWord;
 
-        CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket);
+        CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket, roomId);
         notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
-        CanvasManagement.clearCanvas();
+        CanvasManagement.clearCanvas(roomId);
     }
 
     private static void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {

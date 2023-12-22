@@ -32,41 +32,5 @@ public class BroadcastManagement {
         broadcast(playerCountMessage);
     }
 
-    static void broadcastCountdown(int countdown, int roomId) {
-        Message message = new Message();
-        message.setMessageType("COUNTDOWN");
-        message.setUsername("Server");
-        message.setRoomId(roomId);
-        message.setX(countdown);
 
-        Gson gson = new Gson();
-        String countdownMessage = gson.toJson(message, Message.class);
-
-        broadcast(countdownMessage);
-    }
-
-    static void broadcastLeaderboard(Map<Socket, Integer> playerScoresMap) {
-        for (Map.Entry<Socket, Integer> entry : playerScoresMap.entrySet()) {
-            Socket socket = entry.getKey();
-            Integer score = entry.getValue();
-
-            // Convert Socket to username (or any identifier)
-            String username = RoomServer.getUsernameForSocket(socket);
-
-            Message message =new Message();
-            message.setMessageType("LEADERBOARD");
-            message.setUsername(username);
-            message.setX(score);
-
-            String json = new Gson().toJson(message, Message.class);
-            BroadcastManagement.broadcast(json);
-        }
-    }
-
-    static void broadcastClearLeaderboard(){
-        Message message =new Message();
-        message.setMessageType("CLEAR_LEADERBOARD");
-        String json = new Gson().toJson(message, Message.class);
-        BroadcastManagement.broadcast(json);
-    }
 }
