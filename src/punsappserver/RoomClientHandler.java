@@ -50,11 +50,8 @@ public class RoomClientHandler implements Runnable {
                     int roomPort = 3000 + roomId;
                     handleMessage(messageServer);
                     countdownStarted = true;
-                    //OnMessageReceivedManagement.onCountdownStartReceived(roomId);
-                    //GameManagement.startCountdownTimer(roomId);
                     RoomServer roomServer = new RoomServer(roomPort);
                     roomServer.run();
-                    //GameManagement.startCountdownTimer(roomId);
                 } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
                     username = message.getUsername();
                     roomServer.addUser(username, clientSocket);

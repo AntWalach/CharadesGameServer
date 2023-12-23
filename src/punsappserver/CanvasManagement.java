@@ -66,6 +66,14 @@ public class CanvasManagement {
         BroadcastRoom.broadcastRoom(json,roomServer);
     }
 
+    public static void clearWordLabel(int roomId, RoomServer roomServer) {
+        Message message = new Message();
+        message.setMessageType("CLEAR_WORD_LABEL");
+        message.setRoomId(roomId);
+        String json = new Gson().toJson(message);
+        BroadcastRoom.broadcastRoom(json,roomServer);
+    }
+
     static void setClientColor(String color, Socket clientSocket, int roomId) {
         try {
             PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);

@@ -28,11 +28,19 @@ public class GameManagement {
             Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
             randomWord = getRandomWord(); // Initialize random word
             String username = roomServer.getUsernameForSocket(currentDrawingSocket);
+
+//            Message message = new Message();
+//            message.setMessageType("CHAT");
+//            message.setRoomId(roomId);
+//            message.setChat("Turn to draw: " + username);
+
             Message message = new Message();
-            message.setMessageType("CHAT");
+            message.setMessageType("TURN_INFO");
+            message.setUsername("Server");
             message.setRoomId(roomId);
-            message.setChat("Turn to draw: " + username);
+            message.setChat(username);
             String json = new Gson().toJson(message);
+
             BroadcastRoom.broadcastRoom(json, roomServer);
             notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
 
@@ -62,6 +70,7 @@ public class GameManagement {
         // Notify the current drawing player
         Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
 
+        CanvasManagement.clearWordLabel(roomId, roomServer);
         ChatManagement.clearChatArea(roomId, roomServer);
 
         roomServer.COUNTDOWN_SECONDS = 60;
@@ -82,19 +91,35 @@ public class GameManagement {
     private  void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {
         String username = roomServer.getUsernameForSocket(drawingSocket);
 
+//        Message message = new Message();
+//        message.setMessageType("CHAT");
+//        message.setUsername("Server");
+//        message.setRoomId(roomId);
+//        message.setChat("Turn to draw: " + username);
+//        String json = new Gson().toJson(message);
+//        BroadcastRoom.broadcastRoom(json, roomServer);
+//
+//        message = new Message();
+//        message.setMessageType("CHAT");
+//        message.setUsername("Server");
+//        message.setRoomId(roomId);
+//        message.setChat("Your word is: " + word);
+//        json = new Gson().toJson(message);
+//        RoomServer.sendToClient(json, drawingSocket);
+
         Message message = new Message();
-        message.setMessageType("CHAT");
+        message.setMessageType("TURN_INFO");
         message.setUsername("Server");
         message.setRoomId(roomId);
-        message.setChat("Turn to draw: " + username);
+        message.setChat(username);
         String json = new Gson().toJson(message);
         BroadcastRoom.broadcastRoom(json, roomServer);
 
         message = new Message();
-        message.setMessageType("CHAT");
+        message.setMessageType("WORD_INFO");
         message.setUsername("Server");
         message.setRoomId(roomId);
-        message.setChat("Your word is: " + word);
+        message.setChat(word);
         json = new Gson().toJson(message);
         RoomServer.sendToClient(json, drawingSocket);
 
