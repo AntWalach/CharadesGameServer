@@ -26,7 +26,7 @@ public class CanvasManagement {
         String username = colorMessage.getUsername();
         String color = colorMessage.getColor();
         int roomId = colorMessage.getRoomId();
-        Socket senderSocket = RoomServer.getSocketForUser(username);
+        Socket senderSocket = roomServer.getSocketForUser(username);
 
         // Broadcast the color change to other clients
         broadcastColorChange(color, senderSocket,roomId,roomServer);
@@ -50,7 +50,7 @@ public class CanvasManagement {
                     String json = new Gson().toJson(colorMessage);
                     socketOut.println(json);
 
-                    System.out.println("Sent color change to " + RoomServer.getUsernameForSocket(socket) + ": " + color);
+                    System.out.println("Sent color change to " + roomServer.getUsernameForSocket(socket) + ": " + color);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

@@ -40,7 +40,7 @@ public class BroadcastRoom {
             Integer score = entry.getValue();
 
             // Convert Socket to username (or any identifier)
-            String username = RoomServer.getUsernameForSocket(socket);
+            String username = roomServer.getUsernameForSocket(socket);
 
             Message message =new Message();
             message.setMessageType("LEADERBOARD");

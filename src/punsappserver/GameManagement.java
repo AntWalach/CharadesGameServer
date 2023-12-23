@@ -10,13 +10,13 @@ public class GameManagement {
     protected static int drawingPlayerIndex = 0;
     private static final Random random = new Random();
     RoomServer roomServer;
-
+    protected  String randomWord;
     GameManagement(RoomServer roomServer) {
         this.roomServer = roomServer;
     }
 
      void startCountdownTimer(int roomId) {
-        BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap, roomId, roomServer);
+        BroadcastRoom.broadcastLeaderboard(roomServer.playerScoresMap, roomId, roomServer);
 
         new Thread(() -> {
             try {
@@ -26,15 +26,15 @@ public class GameManagement {
             }
 
             Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
-            RoomServer.randomWord = getRandomWord(); // Initialize random word
-            String username = RoomServer.getUsernameForSocket(currentDrawingSocket);
+            randomWord = getRandomWord(); // Initialize random word
+            String username = roomServer.getUsernameForSocket(currentDrawingSocket);
             Message message = new Message();
             message.setMessageType("CHAT");
             message.setRoomId(roomId);
             message.setChat("Turn to draw: " + username);
             String json = new Gson().toJson(message);
             BroadcastRoom.broadcastRoom(json, roomServer);
-            notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
+            notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
 
             while (roomServer.COUNTDOWN_SECONDS >= 0) {
                 roomServer.COUNTDOWN_SECONDS--;
@@ -70,17 +70,17 @@ public class GameManagement {
         String newRandomWord;
         do {
             newRandomWord = getRandomWord();
-        } while (newRandomWord.equals(RoomServer.randomWord));
+        } while (newRandomWord.equals(randomWord));
 
-        RoomServer.randomWord = newRandomWord;
+       randomWord = newRandomWord;
 
         CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket, roomId, roomServer);
-        notifyDrawingPlayer(currentDrawingSocket, RoomServer.randomWord, roomId);
+        notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
         CanvasManagement.clearCanvas(roomId, roomServer);
     }
 
     private  void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {
-        String username = RoomServer.getUsernameForSocket(drawingSocket);
+        String username = roomServer.getUsernameForSocket(drawingSocket);
 
         Message message = new Message();
         message.setMessageType("CHAT");
@@ -112,31 +112,31 @@ public class GameManagement {
     }
 
 
-    public  void onChatMessageReceived(String username, String chatMessage, int roomId) {
+    public  void onChatMessageReceived(String username, String chatMessage, int roomId, RoomServer roomServer) {
         String trimmedChatMessage = chatMessage.trim().toLowerCase();
 
-        if (trimmedChatMessage.equals(RoomServer.randomWord.toLowerCase())) {
+        if (trimmedChatMessage.equals(randomWord.toLowerCase())) {
             // Handle guessed word message
             Message guessedWordMessage = new Message();
             guessedWordMessage.setMessageType("CHAT");
             guessedWordMessage.setUsername("Server");
             guessedWordMessage.setRoomId(roomId);
-            guessedWordMessage.setChat(username + " guessed the word! - " + RoomServer.randomWord);
+            guessedWordMessage.setChat(username + " guessed the word! - " + randomWord);
 
             String winMessage = new Gson().toJson(guessedWordMessage);
 
-            Socket userSocket = RoomServer.userSocketMap.get(username);
+            Socket userSocket = roomServer.userSocketMap.get(username);
 
             if (userSocket != null) {
                 // Increment the score for the user's socket
-                RoomServer.playerScoresMap.merge(userSocket, 1, Integer::sum);
+                roomServer.playerScoresMap.merge(userSocket, 1, Integer::sum);
             }
 
             // Change drawing player
             changeDrawingPlayer(roomId);
             BroadcastRoom.broadcastClearLeaderboard(roomId, roomServer);
             BroadcastRoom.broadcastRoom(winMessage, roomServer);
-            BroadcastRoom.broadcastLeaderboard(RoomServer.playerScoresMap, roomId, roomServer);
+            BroadcastRoom.broadcastLeaderboard(roomServer.playerScoresMap, roomId, roomServer);
             //clearChatArea();
         } else {
             // Handle regular chat messages

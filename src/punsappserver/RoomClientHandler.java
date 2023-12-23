@@ -57,11 +57,11 @@ public class RoomClientHandler implements Runnable {
                     //GameManagement.startCountdownTimer(roomId);
                 } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
                     username = message.getUsername();
-                    RoomServer.addUser(username, clientSocket);
+                    roomServer.addUser(username, clientSocket);
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
                     CanvasManagement.onColorReceived(messageServer, roomServer);
                 } else if (Objects.equals(message.getMessageType(), "CHAT")){
-                    gameManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId());
+                    gameManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId(), roomServer);
                 } else {
                     handleMessage(messageServer);
                 }
@@ -80,7 +80,7 @@ public class RoomClientHandler implements Runnable {
     private void closeClientSocket() {
         try {
             if (username != null && !username.isEmpty()) {
-                RoomServer.removeUser(username);
+                roomServer.removeUser(username);
             }
             clientSocket.close();
         } catch (IOException e) {

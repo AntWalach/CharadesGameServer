@@ -14,10 +14,10 @@ public class RoomServer implements Runnable{
     ServerSocket roomServerSocket;
     private final int roomPort;
      final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
-    static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
-    static final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
+     final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
+     final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
     static List<String> words = new ArrayList<>();
-    protected static String randomWord;
+
     protected static boolean countdownRunning = false;
 
     protected  int COUNTDOWN_SECONDS = 60;
@@ -68,20 +68,20 @@ public class RoomServer implements Runnable{
         }
     }
 
-    public static void addUser(String username, Socket socket) {
+    public  void addUser(String username, Socket socket) {
         userSocketMap.put(username, socket);
         playerScoresMap.put(socket, 0);
     }
 
-    public static void removeUser(String username) {
+    public  void removeUser(String username) {
         userSocketMap.remove(username);
     }
 
-    public static Socket getSocketForUser(String username) {
+    public  Socket getSocketForUser(String username) {
         return userSocketMap.get(username);
     }
 
-    static String getUsernameForSocket(Socket socket) {
+     String getUsernameForSocket(Socket socket) {
         for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
             if (entry.getValue().equals(socket)) {
                 return entry.getKey(); // Return the username for the given socket
