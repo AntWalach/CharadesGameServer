@@ -8,8 +8,10 @@ import java.net.Socket;
 import java.util.Map;
 
 public class BroadcastRoom {
-    static void broadcastRoom(String message) {
-        for (Socket socket : RoomServer.clientSockets) {
+
+
+    static void broadcastRoom(String message, RoomServer roomServer) {
+        for (Socket socket : roomServer.clientSockets) {
             try {
                 PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
                 socketOut.println(message);
@@ -19,7 +21,7 @@ public class BroadcastRoom {
         }
     }
 
-    static void broadcastCountdown(int countdown, int roomId) {
+    static void broadcastCountdown(int countdown, int roomId, RoomServer roomServer) {
         Message message = new Message();
         message.setMessageType("COUNTDOWN");
         message.setUsername("Server");
@@ -29,10 +31,10 @@ public class BroadcastRoom {
         Gson gson = new Gson();
         String countdownMessage = gson.toJson(message, Message.class);
 
-        broadcastRoom(countdownMessage);
+        broadcastRoom(countdownMessage, roomServer);
     }
 
-    static void broadcastLeaderboard(Map<Socket, Integer> playerScoresMap,int roomId) {
+    static void broadcastLeaderboard(Map<Socket, Integer> playerScoresMap,int roomId, RoomServer roomServer) {
         for (Map.Entry<Socket, Integer> entry : playerScoresMap.entrySet()) {
             Socket socket = entry.getKey();
             Integer score = entry.getValue();
@@ -47,15 +49,15 @@ public class BroadcastRoom {
             message.setX(score);
 
             String json = new Gson().toJson(message, Message.class);
-            broadcastRoom(json);
+            broadcastRoom(json, roomServer);
         }
     }
 
-    static void broadcastClearLeaderboard(int roomId){
+    static void broadcastClearLeaderboard(int roomId, RoomServer roomServer){
         Message message =new Message();
         message.setMessageType("CLEAR_LEADERBOARD");
         message.setRoomId(roomId);
         String json = new Gson().toJson(message, Message.class);
-        BroadcastRoom.broadcastRoom(json);
+        BroadcastRoom.broadcastRoom(json, roomServer);
     }
 }

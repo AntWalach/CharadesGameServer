@@ -10,23 +10,16 @@ public class CanvasManagement {
     private static final long CLEAR_COOLDOWN = 1000;
     private static long lastClearTime = 0;
 
-    public static void onClearCanvasReceived(String message) {
+    public static void onClearCanvasReceived(String message, RoomServer roomServer) {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
-            BroadcastRoom.broadcastRoom(message);
+            BroadcastRoom.broadcastRoom(message, roomServer);
             lastClearTime = currentTime;
         }
     }
 
-    public static void onClearCanvasReceived1(String message) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastClearTime > CLEAR_COOLDOWN) {
-            BroadcastRoom.broadcastRoom(message);
-            lastClearTime = currentTime;
-        }
-    }
 
-    public static void onColorReceived(String messageServer) {
+    public static void onColorReceived(String messageServer, RoomServer roomServer) {
         Gson gson = new Gson();
         Message colorMessage = gson.fromJson(messageServer, Message.class);
 
@@ -36,14 +29,14 @@ public class CanvasManagement {
         Socket senderSocket = RoomServer.getSocketForUser(username);
 
         // Broadcast the color change to other clients
-        broadcastColorChange(color, senderSocket,roomId);
+        broadcastColorChange(color, senderSocket,roomId,roomServer);
 
         // Set the color for the sender client
         setClientColor(color, senderSocket, roomId);
     }
 
-    static void broadcastColorChange(String color, Socket senderSocket,int roomId) {
-        for (Socket socket : RoomServer.clientSockets) {
+    static void broadcastColorChange(String color, Socket senderSocket,int roomId, RoomServer roomServer) {
+        for (Socket socket : roomServer.clientSockets) {
             if (!socket.equals(senderSocket)) {
                 try {
                     PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
@@ -65,12 +58,12 @@ public class CanvasManagement {
         }
     }
 
-    public static void clearCanvas(int roomId) {
+    public static void clearCanvas(int roomId, RoomServer roomServer) {
         Message message = new Message();
         message.setMessageType("CLEAR_CANVAS");
         message.setRoomId(roomId);
         String json = new Gson().toJson(message);
-        BroadcastRoom.broadcastRoom(json);
+        BroadcastRoom.broadcastRoom(json,roomServer);
     }
 
     static void setClientColor(String color, Socket clientSocket, int roomId) {

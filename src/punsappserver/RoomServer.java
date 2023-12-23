@@ -13,14 +13,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class RoomServer implements Runnable{
     ServerSocket roomServerSocket;
     private final int roomPort;
-    static final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
+     final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
     static final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
     static final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
     static List<String> words = new ArrayList<>();
     protected static String randomWord;
     protected static boolean countdownRunning = false;
 
-    protected static int COUNTDOWN_SECONDS = 60;
+    protected  int COUNTDOWN_SECONDS = 60;
+
+
 
     public RoomServer(int roomPort) throws IOException {
         this.roomPort = roomPort;
@@ -29,13 +31,15 @@ public class RoomServer implements Runnable{
 
     public void run() {
         try {
+
             roomServerSocket = new ServerSocket(roomPort);
             System.out.println("Room server running on port " + roomPort);
             // Obsługa klientów na nowym porcie
 
             WordListManagement.loadWordsFromFile();
 
-            GameManagement.startCountdownTimer(roomPort%10);
+            GameManagement gameManagement = new GameManagement(this);
+            gameManagement.startCountdownTimer(roomPort%10);
 
             while (true) {
                 Socket clientSocket = roomServerSocket.accept();
@@ -45,7 +49,7 @@ public class RoomServer implements Runnable{
                 clientSockets.add(clientSocket);
 
                 // Creating a thread to handle the client
-                RoomClientHandler roomClientHandler = new RoomClientHandler(clientSocket);
+                RoomClientHandler roomClientHandler = new RoomClientHandler(clientSocket, this,gameManagement);
                 Thread clientThread = new Thread(roomClientHandler);
                 clientThread.start();
             }

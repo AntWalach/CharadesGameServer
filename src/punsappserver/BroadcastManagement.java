@@ -24,7 +24,7 @@ public class BroadcastManagement {
     static void broadcastPlayerCount() {
         Message message = new Message();
         message.setMessageType("PLAYER_COUNT");
-        message.setX(RoomServer.clientSockets.size());
+        //message.setX(RoomServer.clientSockets.size());
 
         Gson gson = new Gson();
         String playerCountMessage = gson.toJson(message, Message.class);

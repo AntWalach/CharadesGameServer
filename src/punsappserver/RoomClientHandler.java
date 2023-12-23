@@ -14,9 +14,15 @@ public class RoomClientHandler implements Runnable {
     private PrintWriter out;
     private boolean countdownStarted = false;
     private String username;
+    RoomServer roomServer;
 
-    public RoomClientHandler(Socket clientSocket) {
+    GameManagement gameManagement;
+
+    public RoomClientHandler(Socket clientSocket, RoomServer roomServer, GameManagement gameManagement) {
         this.clientSocket = clientSocket;
+        this.roomServer = roomServer;
+        this.gameManagement = gameManagement;
+
         try {
             out = new PrintWriter(clientSocket.getOutputStream(), true);
         } catch (IOException e) {
@@ -38,13 +44,13 @@ public class RoomClientHandler implements Runnable {
                 Message message = gson.fromJson(messageServer, Message.class);
 
                 if (Objects.equals(message.getMessageType(), "CLEAR_CANVAS")) {
-                    CanvasManagement.onClearCanvasReceived(messageServer);
+                    CanvasManagement.onClearCanvasReceived(messageServer, roomServer);
                 } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
                     int roomId = message.getRoomId();
                     int roomPort = 3000 + roomId;
                     handleMessage(messageServer);
                     countdownStarted = true;
-                    OnMessageReceivedManagement.onCountdownStartReceived(roomId);
+                    //OnMessageReceivedManagement.onCountdownStartReceived(roomId);
                     //GameManagement.startCountdownTimer(roomId);
                     RoomServer roomServer = new RoomServer(roomPort);
                     roomServer.run();
@@ -53,9 +59,9 @@ public class RoomClientHandler implements Runnable {
                     username = message.getUsername();
                     RoomServer.addUser(username, clientSocket);
                 } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
-                    CanvasManagement.onColorReceived(messageServer);
+                    CanvasManagement.onColorReceived(messageServer, roomServer);
                 } else if (Objects.equals(message.getMessageType(), "CHAT")){
-                    OnMessageReceivedManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId());
+                    gameManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId());
                 } else {
                     handleMessage(messageServer);
                 }
@@ -68,7 +74,7 @@ public class RoomClientHandler implements Runnable {
     }
 
     private void handleMessage(String message) {
-        OnMessageReceivedManagement.onMessageReceived(message);
+        OnMessageReceivedManagement.onMessageReceivedRoom(message, roomServer);
     }
 
     private void closeClientSocket() {
