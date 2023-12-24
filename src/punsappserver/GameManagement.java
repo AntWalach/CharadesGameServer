@@ -5,8 +5,9 @@ import com.google.gson.Gson;
 import java.net.Socket;
 import java.util.Random;
 
+//Handling game operations
 public class GameManagement {
-    //protected static int COUNTDOWN_SECONDS = 60;
+    // Variables and methods for managing game elements and turns
     protected static int drawingPlayerIndex = 0;
     private static final Random random = new Random();
     RoomServer roomServer;
@@ -15,24 +16,23 @@ public class GameManagement {
         this.roomServer = roomServer;
     }
 
+    // Method to start the countdown timer for drawing turns, starting game
      void startCountdownTimer(int roomId) {
+         // Broadcasting leaderboard to all clients
         BroadcastRoom.broadcastLeaderboard(roomServer.playerScoresMap, roomId, roomServer);
 
         new Thread(() -> {
             try {
-                Thread.sleep(3000);
+                Thread.sleep(3000); //Wait before starting round
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
+            // Retrieve the socket of the current drawing player
             Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
             randomWord = getRandomWord(); // Initialize random word
             String username = roomServer.getUsernameForSocket(currentDrawingSocket);
 
-//            Message message = new Message();
-//            message.setMessageType("CHAT");
-//            message.setRoomId(roomId);
-//            message.setChat("Turn to draw: " + username);
 
             Message message = new Message();
             message.setMessageType("TURN_INFO");
@@ -41,15 +41,14 @@ public class GameManagement {
             message.setChat(username);
             String json = new Gson().toJson(message);
 
-            BroadcastRoom.broadcastRoom(json, roomServer);
-            notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
+            BroadcastRoom.broadcastRoom(json, roomServer); // Broadcast turn information
+            notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId); // Notify the drawing player
 
             while (roomServer.COUNTDOWN_SECONDS >= 0) {
                 roomServer.COUNTDOWN_SECONDS--;
                 if (roomServer.COUNTDOWN_SECONDS < 0) {
                     roomServer.COUNTDOWN_SECONDS = 60; // Reset countdown to 1 minute
-                    changeDrawingPlayer(roomId);
-                    //clearChatArea();
+                    changeDrawingPlayer(roomId); //Change drawing player
                 }
                 BroadcastRoom.broadcastCountdown(roomServer.COUNTDOWN_SECONDS, roomId, roomServer);
                 try {
@@ -61,15 +60,17 @@ public class GameManagement {
         }).start();
     }
 
+    // Method to change the drawing player for the next turn
      void changeDrawingPlayer(int roomId) {
         drawingPlayerIndex++;
         if (drawingPlayerIndex >= roomServer.clientSockets.size()) {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
         }
 
-        // Notify the current drawing player
+         // Retrieve the socket of the current drawing player
         Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
 
+         // Clear elements for the new turn
         CanvasManagement.clearWordLabel(roomId, roomServer);
         ChatManagement.clearChatArea(roomId, roomServer);
 
@@ -81,32 +82,19 @@ public class GameManagement {
             newRandomWord = getRandomWord();
         } while (newRandomWord.equals(randomWord));
 
-       randomWord = newRandomWord;
+        randomWord = newRandomWord;
 
-        CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket, roomId, roomServer);
-        notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
-        CanvasManagement.clearCanvas(roomId, roomServer);
+       // Broadcast changes for the new drawing player and all clients
+         CanvasManagement.broadcastColorChange("0x000000ff",currentDrawingSocket, roomId, roomServer);
+         notifyDrawingPlayer(currentDrawingSocket, randomWord, roomId);
+         CanvasManagement.clearCanvas(roomId, roomServer);
     }
 
+    // Method to inform the drawing player and others about the turn and the word to draw
     private  void notifyDrawingPlayer(Socket drawingSocket, String word, int roomId) {
         String username = roomServer.getUsernameForSocket(drawingSocket);
 
-//        Message message = new Message();
-//        message.setMessageType("CHAT");
-//        message.setUsername("Server");
-//        message.setRoomId(roomId);
-//        message.setChat("Turn to draw: " + username);
-//        String json = new Gson().toJson(message);
-//        BroadcastRoom.broadcastRoom(json, roomServer);
-//
-//        message = new Message();
-//        message.setMessageType("CHAT");
-//        message.setUsername("Server");
-//        message.setRoomId(roomId);
-//        message.setChat("Your word is: " + word);
-//        json = new Gson().toJson(message);
-//        RoomServer.sendToClient(json, drawingSocket);
-
+        // Message for informing clients about the turn
         Message message = new Message();
         message.setMessageType("TURN_INFO");
         message.setUsername("Server");
@@ -115,6 +103,7 @@ public class GameManagement {
         String json = new Gson().toJson(message);
         BroadcastRoom.broadcastRoom(json, roomServer);
 
+        // Message for sending the word to the drawing player only
         message = new Message();
         message.setMessageType("WORD_INFO");
         message.setUsername("Server");
@@ -123,6 +112,7 @@ public class GameManagement {
         json = new Gson().toJson(message);
         RoomServer.sendToClient(json, drawingSocket);
 
+        // Permission message for the drawing player to start drawing
         message = new Message();
         message.setMessageType("PERMISSION");
         message.setUsername("Server");
@@ -136,7 +126,7 @@ public class GameManagement {
         return RoomServer.words.get(random.nextInt(RoomServer.words.size()));
     }
 
-
+    // Method to handle chat messages received during the game
     public  void onChatMessageReceived(String username, String chatMessage, int roomId, RoomServer roomServer) {
         String trimmedChatMessage = chatMessage.trim().toLowerCase();
 
@@ -162,7 +152,6 @@ public class GameManagement {
             BroadcastRoom.broadcastClearLeaderboard(roomId, roomServer);
             BroadcastRoom.broadcastRoom(winMessage, roomServer);
             BroadcastRoom.broadcastLeaderboard(roomServer.playerScoresMap, roomId, roomServer);
-            //clearChatArea();
         } else {
             // Handle regular chat messages
             Message regularChatMessage = new Message();
@@ -171,7 +160,6 @@ public class GameManagement {
             regularChatMessage.setUsername(username);
             regularChatMessage.setChat(chatMessage);
             String regularChatJson = new Gson().toJson(regularChatMessage);
-            //BroadcastManagement.broadcast(regularChatJson);
             BroadcastRoom.broadcastRoom(regularChatJson, roomServer);
         }
     }

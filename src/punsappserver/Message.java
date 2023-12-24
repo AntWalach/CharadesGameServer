@@ -1,24 +1,28 @@
 package punsappserver;
 
 public class Message {
-    int roomId;
-    String username;
-    String messageType;
-    String chat;
-    double x;
-    double y;
+    // Attributes of the Message class representing different message properties
+    int roomId; // Room ID associated with the message
+    String username; // Username related to the message
+    String messageType; // Type of message (e.g., "CHAT", "TURN_INFO", "WORD_INFO")
+    String chat; // Content of the message (e.g., chat text, information)
+    double x; // X-coordinate
+    double y; // Y-coordinate
 
-    private String color;
+    // Additional attribute specific to certain message types
+    private String color; // Color information for the message (if applicable)
 
+    // Default constructor initializing message attributes
     public Message() {
-        this.roomId = -1;
-        this.username = "";
-        this.messageType = "";
-        this.chat = "";
-        this.x = 0;
-        this.y = 0;
+        this.roomId = -1; // Default room ID set to -1
+        this.username = ""; // Default username set to an empty string
+        this.messageType = ""; // Default message type set to an empty string
+        this.chat = ""; // Default chat content set to an empty string
+        this.x = 0; // Default X-coordinate set to 0
+        this.y = 0; // Default Y-coordinate set to 0
     }
 
+    // Getters and setters for the Message attributes
     public String getUsername() {
         return username;
     }

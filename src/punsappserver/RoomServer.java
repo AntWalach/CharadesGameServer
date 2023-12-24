@@ -10,46 +10,44 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class RoomServer implements Runnable{
+//Server for game room
+public class RoomServer implements Runnable {
     ServerSocket roomServerSocket;
     private final int roomPort;
-     final List<Socket> clientSockets = new CopyOnWriteArrayList<>();
-     final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>();
-     final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>();
+    final List<Socket> clientSockets = new CopyOnWriteArrayList<>(); //List of clients sockets
+    final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>(); // Map of usernames and sockets of clients
+    final Map<Socket, Integer> playerScoresMap = new ConcurrentHashMap<>(); // Map of clients sockets and scores
     static List<String> words = new ArrayList<>();
 
-    protected static boolean countdownRunning = false;
-
-    protected  int COUNTDOWN_SECONDS = 60;
-
-
+    protected int COUNTDOWN_SECONDS = 60; // Round time
 
     public RoomServer(int roomPort) throws IOException {
         this.roomPort = roomPort;
-
     }
 
     public void run() {
         try {
-
+            // Initialize room server socket and start handling clients
             roomServerSocket = new ServerSocket(roomPort);
             System.out.println("Room server running on port " + roomPort);
-            // Obsługa klientów na nowym porcie
 
+            // Load words for the game
             WordListManagement.loadWordsFromFile();
 
+            // Create game management instance for this room
             GameManagement gameManagement = new GameManagement(this);
-            gameManagement.startCountdownTimer(roomPort%10);
+            gameManagement.startCountdownTimer(roomPort % 10); // Start the countdown timer for the game
 
+            // Accept incoming client connections
             while (true) {
                 Socket clientSocket = roomServerSocket.accept();
                 System.out.println("Client connected: " + clientSocket);
 
-                // Adding the client to the list of clients
+                // Add the client to the list of clients
                 clientSockets.add(clientSocket);
 
-                // Creating a thread to handle the client
-                RoomClientHandler roomClientHandler = new RoomClientHandler(clientSocket, this,gameManagement);
+                // Create a thread to handle the client in this room
+                RoomClientHandler roomClientHandler = new RoomClientHandler(clientSocket, this, gameManagement);
                 Thread clientThread = new Thread(roomClientHandler);
                 clientThread.start();
             }
@@ -58,7 +56,7 @@ public class RoomServer implements Runnable{
         }
     }
 
-
+    // Method to send a message to a specific client socket
     static void sendToClient(String message, Socket socket) {
         try {
             PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
@@ -68,20 +66,22 @@ public class RoomServer implements Runnable{
         }
     }
 
-    public  void addUser(String username, Socket socket) {
+    // Methods for managing users in the room
+    public void addUser(String username, Socket socket) {
         userSocketMap.put(username, socket);
         playerScoresMap.put(socket, 0);
     }
 
-    public  void removeUser(String username) {
+    public void removeUser(String username) {
         userSocketMap.remove(username);
     }
 
-    public  Socket getSocketForUser(String username) {
+    public Socket getSocketForUser(String username) {
         return userSocketMap.get(username);
     }
 
-     String getUsernameForSocket(Socket socket) {
+    // Method to get username based on the socket
+    String getUsernameForSocket(Socket socket) {
         for (Map.Entry<String, Socket> entry : userSocketMap.entrySet()) {
             if (entry.getValue().equals(socket)) {
                 return entry.getKey(); // Return the username for the given socket
