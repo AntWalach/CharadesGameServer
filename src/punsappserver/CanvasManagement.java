@@ -89,6 +89,7 @@ public class CanvasManagement {
     // Method to set the color for a specific client
     static void setClientColor(String color, Socket clientSocket, int roomId) {
         try {
+            PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);
             // Create a message for the color change
             Message colorMessage = new Message();
             colorMessage.setUsername("Server");
@@ -96,8 +97,8 @@ public class CanvasManagement {
             colorMessage.setMessageType("COLOR_CHANGE");
             colorMessage.setColor(color);
 
-            // Convert the color change message to JSON and send it to the client socket
-            PrintWriter socketOut = new PrintWriter(clientSocket.getOutputStream(), true);
+            // Convert the color change message to JSON
+
             String json = new Gson().toJson(colorMessage);
             socketOut.println(json);
         } catch (IOException e) {
