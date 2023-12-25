@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WaitingRoomManagement {
     // Map to track players and their assigned rooms
     static final Map<String, Integer> playersMap = new ConcurrentHashMap<>();
+    static final Map<Integer, Long> roomPlayerCounts = new HashMap<>();
     static int roomCount = 0; // Counter to keep track of created rooms
 
     // Method to create a new room and broadcast its creation
@@ -26,23 +27,45 @@ public class WaitingRoomManagement {
     }
 
     // Method to add a player to a specific room
-    static void joinRoom(int roomId, String username) {
-        playersMap.put(username, roomId); // Assigning a player to a room
+    static void joinRoom(int newRoomId, String username) {
+        // Check if the user is already in a room
+        if (playersMap.containsKey(username)) {
+            int currentRoomId = playersMap.get(username);
+
+            // Decrement player count in the current room
+            decrementPlayerCount(currentRoomId);
+
+            // Update the user's room to the new room
+            playersMap.put(username, newRoomId);
+
+            // Increment player count in the new room
+            incrementPlayerCount(newRoomId);
+        } else {
+            // If the user is not in any room, simply assign them to the new room
+            playersMap.put(username, newRoomId);
+
+            // Increment player count in the new room
+            incrementPlayerCount(newRoomId);
+        }
 
         // Update player counts in each room
         countPlayersForEachRoom();
     }
 
+    // Method to decrement player count in a specific room
+    static void decrementPlayerCount(int roomId) {
+        if (roomPlayerCounts.containsKey(roomId)) {
+            roomPlayerCounts.put(roomId, roomPlayerCounts.get(roomId) - 1);
+        }
+    }
+
+    // Method to increment player count in a specific room
+    static void incrementPlayerCount(int roomId) {
+        roomPlayerCounts.put(roomId, roomPlayerCounts.getOrDefault(roomId, 0L) + 1);
+    }
+
     // Method to count the number of players in each room and broadcast the counts
     static void countPlayersForEachRoom() {
-        Map<Integer, Long> roomPlayerCounts = new HashMap<>();
-
-        // Calculate player counts for each room
-        for (Map.Entry<String, Integer> entry : playersMap.entrySet()) {
-            int roomId = entry.getValue();
-            roomPlayerCounts.put(roomId, roomPlayerCounts.getOrDefault(roomId, 0L) + 1);
-        }
-
         // Broadcast the player counts for each room
         for (Map.Entry<Integer, Long> roomEntry : roomPlayerCounts.entrySet()) {
             int roomId = roomEntry.getKey();
