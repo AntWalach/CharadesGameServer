@@ -45,30 +45,39 @@ public class RoomClientHandler implements Runnable {
                 Message message = gson.fromJson(messageServer, Message.class);
 
                 // Handle different types of messages based on their message types
-                if (Objects.equals(message.getMessageType(), "CLEAR_CANVAS")) {
-                    // Handle clearing canvas message
-                    CanvasManagement.onClearCanvasReceived(messageServer, roomServer);
-                } else if (Objects.equals(message.getMessageType(), "START") && !countdownStarted) {
-                    // Start countdown and initialize the room server when "START" message received
-                    int roomId = message.getRoomId();
-                    int roomPort = 3000 + roomId;
-                    handleMessage(messageServer);
-                    countdownStarted = true;
-                    RoomServer roomServer = new RoomServer(roomPort);
-                    roomServer.run();
-                } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
-                    // Set username for the client
-                    username = message.getUsername();
-                    roomServer.addUser(username, clientSocket);
-                } else if (Objects.equals(message.getMessageType(), "COLOR_CHANGE")) {
-                    // Handle color change message for the canvas
-                    CanvasManagement.onColorReceived(messageServer, roomServer);
-                } else if (Objects.equals(message.getMessageType(), "CHAT")) {
-                    // Handle chat message received
-                    gameManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId(), roomServer);
-                } else {
-                    // Handle other types of messages
-                    handleMessage(messageServer);
+                switch (message.getMessageType()) {
+                    case "CLEAR_CANVAS":
+                        // Handle clearing canvas message
+                        CanvasManagement.onClearCanvasReceived(messageServer, roomServer);
+                        break;
+                    case "START":
+                        // Start countdown and initialize the room server when "START" message received
+                        if (!countdownStarted) {
+                            int roomId = message.getRoomId();
+                            int roomPort = 3000 + roomId;
+                            handleMessage(messageServer);
+                            countdownStarted = true;
+                            RoomServer roomServer = new RoomServer(roomPort);
+                            new Thread(roomServer).start(); // Start the RoomServer in a new thread
+                        }
+                        break;
+                    case "SET_USERNAME":
+                        // Set username for the client
+                        username = message.getUsername();
+                        roomServer.addUser(username, clientSocket);
+                        break;
+                    case "COLOR_CHANGE":
+                        // Handle color change message for the canvas
+                        CanvasManagement.onColorReceived(messageServer, roomServer);
+                        break;
+                    case "CHAT":
+                        // Handle chat message received
+                        gameManagement.onChatMessageReceived(username, message.getChat(), message.getRoomId(), roomServer);
+                        break;
+                    default:
+                        // Handle other types of messages
+                        handleMessage(messageServer);
+                        break;
                 }
             }
         } catch (IOException e) {

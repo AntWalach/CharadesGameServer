@@ -38,32 +38,43 @@ public class ClientHandler implements Runnable {
             // Continuously listen for incoming messages from the client
             while ((messageServer = in.readLine()) != null) {
                 System.out.println("Received message: " + messageServer);
-
                 // Deserialize the incoming JSON message into a Message object using Gson
                 Gson gson = new Gson();
                 Message message = gson.fromJson(messageServer, Message.class);
 
                 // Handle different types of messages from the client
-                if (Objects.equals(message.getMessageType(), "START")) {
-                    // Initiating a room server based on the received message
-                    int roomId = message.getRoomId();
-                    int roomPort = 3000 + roomId;
-                    handleMessage(messageServer);
-                    RoomServer roomServer = new RoomServer(roomPort);
-                    roomServer.run();
-                } else if (Objects.equals(message.getMessageType(), "SET_USERNAME")) {
-                    // Assigning the received username to the client's socket
-                    username = message.getUsername();
-                    CharadesGameServer.addUser(username, clientSocket);
-                }  else if (Objects.equals(message.getMessageType(), "CREATE_ROOM")) {
-                    // Creating a new room in the waiting room management
-                    WaitingRoomManagement.createNewRoom();
-                } else if (Objects.equals(message.getMessageType(), "JOIN_ROOM")) {
-                    // Instructing the waiting room management to join a room
-                    WaitingRoomManagement.joinRoom(message.roomId, message.getUsername());
-                } else {
-                    // Forwarding the received message for further handling
-                    handleMessage(messageServer);
+                switch (message.getMessageType()) {
+                    case "START":
+                        // Initiating a room server based on the received message
+                        int roomId = message.getRoomId();
+                        int roomPort = 3000 + roomId;
+                        handleMessage(messageServer);
+                        RoomServer roomServer = new RoomServer(roomPort);
+                        new Thread(roomServer).start(); // Start the RoomServer in a new thread
+                        break;
+                    case "SET_USERNAME":
+                        // Assigning the received username to the client's socket
+                        username = message.getUsername();
+                        CharadesGameServer.addUser(username, clientSocket);
+                        break;
+                    case "CREATE_ROOM":
+                        // Creating a new room in the waiting room management
+                        WaitingRoomManagement.createNewRoom();
+                        break;
+                    case "JOIN_ROOM":
+                        int joinedRoomId = message.getRoomId();
+                        String joiningUsername = message.getUsername();
+
+                        // Instructing the waiting room management to join a room
+                        WaitingRoomManagement.joinRoom(joinedRoomId, joiningUsername);
+
+                        // Broadcast updated player counts to all clients
+                        WaitingRoomManagement.countPlayersForEachRoom();
+                        break;
+
+                    default:
+                        // Forwarding the received message for further handling
+                        handleMessage(messageServer);
                 }
             }
         } catch (IOException e) {
