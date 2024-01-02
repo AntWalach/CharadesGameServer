@@ -59,6 +59,13 @@ public class WaitingRoomManagement {
         }
     }
 
+    static void leaveRoomPlayerCount(int roomId, String username) {
+        if (roomPlayerCounts.containsKey(roomId)) {
+            playersMap.remove(username);
+            roomPlayerCounts.put(roomId, roomPlayerCounts.get(roomId) - 1);
+        }
+    }
+
     // Method to increment player count in a specific room
     static void incrementPlayerCount(int roomId) {
         roomPlayerCounts.put(roomId, roomPlayerCounts.getOrDefault(roomId, 0L) + 1);

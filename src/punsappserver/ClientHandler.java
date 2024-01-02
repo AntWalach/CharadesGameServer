@@ -13,7 +13,6 @@ import java.util.Objects;
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private PrintWriter out;
-    private boolean countdownStarted = false;
     private String username;
 
     // Constructor initializing the client handler with a client socket
@@ -71,7 +70,15 @@ public class ClientHandler implements Runnable {
                         // Broadcast updated player counts to all clients
                         WaitingRoomManagement.countPlayersForEachRoom();
                         break;
+                    case "LEAVE_ROOM" :
+                        int leavedRoomId = message.getRoomId();
+                        String leavingUsername = message.getUsername();
 
+                        // Instructing the waiting room management to join a room
+                        WaitingRoomManagement.leaveRoomPlayerCount(leavedRoomId, leavingUsername);
+
+                        // Broadcast updated player counts to all clients
+                        WaitingRoomManagement.countPlayersForEachRoom();
                     default:
                         // Forwarding the received message for further handling
                         handleMessage(messageServer);
