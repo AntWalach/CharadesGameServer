@@ -13,15 +13,17 @@ public class BroadcastRoom {
     static void broadcastRoom(String message, RoomServer roomServer) {
         // Loop through each client socket in the room's clientSockets list
         for (Socket socket : roomServer.clientSockets) {
-            try {
-                // Create a PrintWriter to send messages to the current socket's output stream
-                PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
+            if(!socket.isClosed()) {
+                try {
+                    // Create a PrintWriter to send messages to the current socket's output stream
+                    PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
 
-                // Send the message to the client through the socket
-                socketOut.println(message);
-            } catch (IOException e) {
-                // Handle any IOException that might occur during the sending process
-                e.printStackTrace();
+                    // Send the message to the client through the socket
+                    socketOut.println(message);
+                } catch (IOException e) {
+                    // Handle any IOException that might occur during the sending process
+                    e.printStackTrace();
+                }
             }
         }
     }

@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 //Server for game room
 public class RoomServer implements Runnable {
     ServerSocket roomServerSocket;
+    private volatile boolean isRoomOpen = true;
     private final int roomPort;
     final List<Socket> clientSockets = new CopyOnWriteArrayList<>(); //List of clients sockets
     final Map<String, Socket> userSocketMap = new ConcurrentHashMap<>(); // Map of usernames and sockets of clients
@@ -88,5 +89,24 @@ public class RoomServer implements Runnable {
             }
         }
         return null; // Return null if the socket is not found in the map
+    }
+
+    //Closing game room
+    public void closeRoom() {
+        isRoomOpen = false;
+
+        try {
+            roomServerSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (Socket clientSocket : clientSockets) {
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

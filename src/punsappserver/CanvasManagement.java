@@ -58,9 +58,6 @@ public class CanvasManagement {
                     PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
                     String json = new Gson().toJson(colorMessage);
                     socketOut.println(json);
-
-                    // Log the sent color change message
-                    System.out.println("Sent color change to " + roomServer.getUsernameForSocket(socket) + ": " + color);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

@@ -16,6 +16,9 @@ public class GameManagement {
         this.roomServer = roomServer;
     }
 
+    private static final int MAX_ROUNDS = 10; //Game length
+    private int currentRound = 0;
+
     // Method to start the countdown timer for drawing turns, starting game
      void startCountdownTimer(int roomId) {
          // Broadcasting leaderboard to all clients
@@ -62,6 +65,8 @@ public class GameManagement {
 
     // Method to change the drawing player for the next turn
      void changeDrawingPlayer(int roomId) {
+         checkAndEndGame(roomId);
+
         drawingPlayerIndex++;
         if (drawingPlayerIndex >= roomServer.clientSockets.size()) {
             drawingPlayerIndex = 0; // Reset to the first client socket if reached the end
@@ -161,6 +166,22 @@ public class GameManagement {
             regularChatMessage.setChat(chatMessage);
             String regularChatJson = new Gson().toJson(regularChatMessage);
             BroadcastRoom.broadcastRoom(regularChatJson, roomServer);
+        }
+    }
+
+    //Method managing closing game
+    private void checkAndEndGame(int roomId) {
+        currentRound++;
+        if (currentRound >= MAX_ROUNDS) {
+
+            Message message = new Message();
+            message.setRoomId(roomId);
+            message.setMessageType("END_GAME");
+
+            String json = new Gson().toJson(message, Message.class);
+
+            BroadcastRoom.broadcastRoom(json, roomServer);
+            roomServer.closeRoom(); // Przykładowe zamknięcie pokoju
         }
     }
 }
