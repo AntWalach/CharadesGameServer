@@ -201,6 +201,7 @@ public class GameManagement {
         }
     }
 
+    // Checking if username is already in database
     public boolean checkIfUserExists(String username) {
         String query = "SELECT COUNT(*) FROM CharadesLeaderboard WHERE username = ?";
         try (Connection connectDB = connectNow.getConnection();
@@ -217,6 +218,7 @@ public class GameManagement {
         return false;
     }
 
+    // If username exist in database increment his score
     public void incrementUserScore(String username) {
         String query = "UPDATE CharadesLeaderboard SET score = score + 1 WHERE username = ?";
         try (Connection connectDB = connectNow.getConnection();
@@ -233,6 +235,7 @@ public class GameManagement {
         }
     }
 
+    // If username does not exist in database add new username with score
     public void addNewUserToDatabase(String username) {
         String query = "INSERT INTO CharadesLeaderboard (username, score) VALUES (?, ?)";
         try (Connection connectDB = connectNow.getConnection();

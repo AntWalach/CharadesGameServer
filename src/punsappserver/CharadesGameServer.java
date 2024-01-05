@@ -26,23 +26,6 @@ public class CharadesGameServer {
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("Charades Game Server is running on port " + PORT);
 
-//            DatabaseConnection connectNow = new DatabaseConnection();
-//            Connection connectDB = connectNow.getConnection();
-//
-//            String query1 = "SELECT * FROM CharadesLeaderboard";
-//            //String test = "select count(*) from charadesleaderboard";
-//
-//            try {
-//                Statement statement = connectDB.createStatement();
-//                ResultSet queryResult = statement.executeQuery(query1);
-//
-//                while (queryResult.next()) {
-//                    System.out.println(queryResult.getInt(1));
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-
             while (true) {
                 // Accept incoming client connections
                 Socket clientSocket = serverSocket.accept();
