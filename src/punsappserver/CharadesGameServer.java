@@ -3,6 +3,10 @@ package punsappserver;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -21,6 +25,23 @@ public class CharadesGameServer {
             // ServerSocket setup to listen for incoming connections on a specific port
             ServerSocket serverSocket = new ServerSocket(PORT);
             System.out.println("Charades Game Server is running on port " + PORT);
+
+//            DatabaseConnection connectNow = new DatabaseConnection();
+//            Connection connectDB = connectNow.getConnection();
+//
+//            String query1 = "SELECT * FROM CharadesLeaderboard";
+//            //String test = "select count(*) from charadesleaderboard";
+//
+//            try {
+//                Statement statement = connectDB.createStatement();
+//                ResultSet queryResult = statement.executeQuery(query1);
+//
+//                while (queryResult.next()) {
+//                    System.out.println(queryResult.getInt(1));
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 
             while (true) {
                 // Accept incoming client connections

@@ -3,6 +3,10 @@ package punsappserver;
 import com.google.gson.Gson;
 
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Random;
 
 //Handling game operations
@@ -12,6 +16,7 @@ public class GameManagement {
     private static final Random random = new Random();
     RoomServer roomServer;
     protected  String randomWord;
+    DatabaseConnection connectNow = new DatabaseConnection();
     GameManagement(RoomServer roomServer) {
         this.roomServer = roomServer;
     }
@@ -152,6 +157,17 @@ public class GameManagement {
                 roomServer.playerScoresMap.merge(userSocket, 1, Integer::sum);
             }
 
+            // Database update
+            // Check if the user exists in the database
+            if (checkIfUserExists(username)) {
+                // If the user exists, increment the score by 1
+                incrementUserScore(username);
+            } else {
+                // If the user doesn't exist, add the user with score 1
+                addNewUserToDatabase(username);
+            }
+
+
             // Change drawing player
             changeDrawingPlayer(roomId);
             BroadcastRoom.broadcastClearLeaderboard(roomId, roomServer);
@@ -182,6 +198,55 @@ public class GameManagement {
 
             BroadcastRoom.broadcastRoom(json, roomServer);
             roomServer.closeRoom(); // Przykładowe zamknięcie pokoju
+        }
+    }
+
+    public boolean checkIfUserExists(String username) {
+        String query = "SELECT COUNT(*) FROM CharadesLeaderboard WHERE username = ?";
+        try (Connection connectDB = connectNow.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                return count > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void incrementUserScore(String username) {
+        String query = "UPDATE CharadesLeaderboard SET score = score + 1 WHERE username = ?";
+        try (Connection connectDB = connectNow.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            int rowsUpdated = preparedStatement.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("Score incremented for user: " + username);
+            } else {
+                System.out.println("Failed to increment score for user: " + username);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addNewUserToDatabase(String username) {
+        String query = "INSERT INTO CharadesLeaderboard (username, score) VALUES (?, ?)";
+        try (Connection connectDB = connectNow.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setInt(2, 1);
+            int rowsInserted = preparedStatement.executeUpdate();
+            if (rowsInserted > 0) {
+                System.out.println("New user added: " + username);
+            } else {
+                System.out.println("Failed to add new user: " + username);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }
