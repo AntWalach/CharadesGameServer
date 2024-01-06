@@ -3,6 +3,7 @@ package punsappserver;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
+// Class for connecting to Oracle Database
 public class DatabaseConnection {
     public Connection databaseLink;
 

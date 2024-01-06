@@ -16,13 +16,13 @@ public class GameManagement {
     private static final Random random = new Random();
     RoomServer roomServer;
     protected  String randomWord;
-    DatabaseConnection connectNow = new DatabaseConnection();
+    DatabaseConnection connectNow = new DatabaseConnection(); // Database connection
+    private static final int MAX_ROUNDS = 10; //Game length
+    private int currentRound = 0;
+
     GameManagement(RoomServer roomServer) {
         this.roomServer = roomServer;
     }
-
-    private static final int MAX_ROUNDS = 10; //Game length
-    private int currentRound = 0;
 
     // Method to start the countdown timer for drawing turns, starting game
      void startCountdownTimer(int roomId) {
@@ -40,7 +40,6 @@ public class GameManagement {
             Socket currentDrawingSocket = roomServer.clientSockets.get(drawingPlayerIndex);
             randomWord = getRandomWord(); // Initialize random word
             String username = roomServer.getUsernameForSocket(currentDrawingSocket);
-
 
             Message message = new Message();
             message.setMessageType("TURN_INFO");
